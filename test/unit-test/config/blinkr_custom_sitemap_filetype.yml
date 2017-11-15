@@ -1,0 +1,2 @@
+<% sitemap_loc = "#{File.dirname(File.expand_path('..', __FILE__))}/blinkr/test/unit-test/config/sitemap.xml" %>
+custom_sitemap: <%= sitemap_loc %>

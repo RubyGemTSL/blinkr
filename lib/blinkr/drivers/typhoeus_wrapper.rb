@@ -11,15 +11,12 @@ module Blinkr
     attr_reader :count, :hydra
 
     def initialize(config, context)
-      @config = config.validate
-      # Configure Typhoeus a bit
-      Typhoeus::Config.verbose = true if config.vverbose
+      @config = config
       Typhoeus::Config.cache = Blinkr::Cache.new
-      @hydra = Typhoeus::Hydra.new(maxconnects: (@config.maxconnects || 30),
-                                   max_total_connections: (@config.maxconnects || 30),
+      @hydra = Typhoeus::Hydra.new(maxconnects: (30),
+                                   max_total_connections: (30),
                                    pipelining: false,
-                                   max_concurrency: (@config.maxconnects || 30))
-      Ethon.logger = Logger.new STDOUT if config.vverbose
+                                   max_concurrency: (30))
       Ethon::Curl.set_option(:max_host_connections, 5, @hydra.multi.handle, :multi)
       @count = 0
       @context = context
@@ -57,7 +54,9 @@ module Blinkr
         puts '\nResponse'
         puts '========'
         puts "Status Code: #{resp.code}"
+        @status_code = resp.code
         puts "Status Message: #{resp.status_message}"
+        @status_msg = resp.status_message
         puts "Message: #{resp.return_message}" unless resp.return_message.nil? || resp.return_message == 'No error'
         puts '\nHeaders'
         puts '-------'
@@ -82,7 +81,7 @@ module Blinkr
         req.on_complete do |resp|
           if retry? resp
             if resp.code.to_i == 0
-              @logger.info("Response code of '0', using net/http for #{url}") if @config.verbose
+              @logger.info("Response code of '0', using net/http for #{url}")
               response = nil
 
               begin
@@ -102,10 +101,10 @@ module Blinkr
             end
 
             if limit > 1
-              @logger.info("Loading #{url} via typhoeus (attempt #{max - limit + 2} of #{max})".yellow) if @config.verbose
+              @logger.info("Loading #{url} via typhoeus (attempt #{max - limit + 2} of #{max})".yellow)
               _process(url, limit - 1, max, &Proc.new)
             else
-              @logger.info("Loading #{url} via typhoeus failed".red) if @config.verbose
+              @logger.info("Loading #{url} via typhoeus failed".red)
               response = Typhoeus::Response.new(code: 0, status_message: "Server timed out after #{max} retries",
                                                 mock: true)
               response.request = Typhoeus::Request.new(url, ssl_verifypeer: false)

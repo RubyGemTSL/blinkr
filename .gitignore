@@ -16,3 +16,11 @@ test/tmp
 test/version_tmp
 tmp
 *.swp
+.idea/.rakeTasks
+*.iml
+.idea/vcs.xml
+.idea/workspace.xml
+blinkr.html
+.idea/inspectionProfiles/Project_Default.xml
+.idea/misc.xml
+.idea/modules.xml

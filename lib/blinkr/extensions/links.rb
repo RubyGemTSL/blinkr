@@ -11,112 +11,61 @@ module Blinkr
 
       def initialize(config)
         @config = config
-        @links = {}
+        @collected_links = {}
         @logger = Blinkr.logger
       end
 
-      # Collect all hrefs and return links and their location on page.
       def collect(page)
         page.body.css('a[href]').each do |a|
           attr = a.attribute('href')
           src = page.response.effective_url
           url = attr.value
-          unless @config.skipped?(url)
-            url = sanitize(url, src)
-            unless url.nil?
-              @links[url] ||= []
-              @links[url] << { page: page, line: attr.line, snippet: attr.parent.to_s }
-            end
+          next if @config.skipped?(url) || !is_url?(url)
+          url = sanitize(url, src)
+          unless url.nil?
+            @collected_links[url] ||= []
+            @collected_links[url] << { page: page, line: attr.line, snippet: attr.parent.to_s }
           end
         end
-        @links
+        @links = get_links(@collected_links)
       end
 
       def analyze(context, browser)
-        @logger.info("Found #{@links.length} links".yellow)
-        start = DateTime.now
-
-        # warn if internal links do not exist within sitemap
+        @logger.info("Found #{@links.size} links".yellow)
         unless @config.ignore_internal
           internal_links = @links.select { |k| k.start_with? @config.base_url }
-          internal_links.each do |url, locations|
+          internal_links.each do |url, _|
             link = fixup_link(url)
-            unless context.pages.keys.include?(link.to_s) || context.pages.keys.include?("#{link}/")
-              locations.each do |location|
-                location[:page].errors << Blinkr::Error.new(severity: :warning,
-                                                            category: 'Resource missing from sitemap',
-                                                            type: '<a href=""> target missing from sitemap',
-                                                            url: link.to_s,
-                                                            title: "#{link} (line #{location[:line]})",
-                                                            code: nil,
-                                                            message: 'Missing from sitemap',
-                                                            detail: 'Checked with Typheous',
-                                                            snippet: location[:snippet],
-                                                            icon: 'fa-bookmark-o')
-              end
-            end
+            next if context.pages.keys.include?(link.to_s) || context.pages.keys.include?("#{link}/")
           end
         end
-
-        unless @config.environments.empty?
-          # Raise an error if links contain user specified environment urls.
-          # For example in a staging environment you may wish to warn/error
-          # if links are incorrectly linking to a production environment.
-          @links.each do |url, locations|
-            if @config.environments.kind_of?(Array)
-              @config.environments.each do |env|
-                if url.to_s.include?(env)
-                  locations.each do |location|
-                    location[:page].errors << Blinkr::Error.new(severity: :danger,
-                                                                category: 'Incorrect Environment',
-                                                                type: '<a href=""> target is incorrect environment',
-                                                                url: url.to_s,
-                                                                title: "#{url} (line #{location[:line]})",
-                                                                code: nil,
-                                                                message: 'Incorrect Environment',
-                                                                detail: 'Checked with Typheous',
-                                                                snippet: location[:snippet],
-                                                                icon: 'fa-bookmark-o')
-                  end
-                end
-              end
-            else
-              if url.to_s.include?(@config.environments)
-                locations.each do |location|
-                  location[:page].errors << Blinkr::Error.new(severity: :danger,
-                                                              category: 'Incorrect Environment',
-                                                              type: '<a href=""> target is incorrect environment',
-                                                              url: url.to_s,
-                                                              title: "#{url} (line #{location[:line]})",
-                                                              code: nil,
-                                                              message: 'Incorrect Environment',
-                                                              detail: 'Checked with Typheous',
-                                                              snippet: location[:snippet],
-                                                              icon: 'fa-bookmark-o')
-                end
-              end
-            end
-          end
-        end
-
-        if @config.ignore_external
-          @logger.info('Ignoring external links')
-          internal_links = @links.select { |k| k.start_with? @config.base_url }
-          check_links(browser, internal_links)
-        elsif @config.ignore_internal
-          @logger.info('Ignoring internal links')
-          external_links = @links.reject { |k| k.start_with? @config.base_url }
-          check_links(browser, external_links)
-        else
-          @logger.info('Checking internal and external links')
-          check_links(browser, @links)
-        end
-
-        @logger.info("Total time to check links: #{(DateTime.now.to_time - start.to_time).duration}") if @config.verbose
-
+        warn_incorrect_env(@links) unless @config.environments.empty?
+        check_links(browser, @links)
       end
 
       private
+
+      def warn_incorrect_env(links)
+        links.each do |url, locations|
+          next unless @config.environments.is_a?(Array)
+          @config.environments.each do |env|
+            next unless url.to_s.include?(env)
+            locations.each do |location|
+              location[:page].errors << Blinkr::Error.new(severity: :warning,
+                                                          category: 'Incorrect Environment',
+                                                          type: '<a href=""> target is incorrect environment',
+                                                          url: url.to_s,
+                                                          title: "#{url} (line #{location[:line]})",
+                                                          code: nil,
+                                                          message: 'Incorrect Environment',
+                                                          detail: 'Checked with Typheous',
+                                                          snippet: location[:snippet],
+                                                          icon: 'fa-bookmark-o')
+            end
+          end
+        end
+      end
+
       def fixup_link(url)
         link = URI.parse(url)
         link.fragment = nil
@@ -124,6 +73,20 @@ module Blinkr
         link.path = link.path.gsub(%r{/\/+/}, '/') if link.path
         url = URI.parse(@config.base_url).merge(link).to_s
         url.chomp('/') if url[-1, 1] == '/'
+      end
+
+      def is_url?(url)
+        true if url =~ /^#{URI.regexp(%w[http https])}$/
+      end
+
+      def get_links(links)
+        if @config.ignore_external
+          links.select { |k| k.start_with? @config.base_url }
+        elsif @config.ignore_internal
+          links.reject { |k| k.start_with? @config.base_url }
+        else
+          links
+        end
       end
 
       def check_links(browser, links)
@@ -135,9 +98,8 @@ module Blinkr
             @logger.info("Loaded #{url} via #{browser.name} #{'(cached)' if resp.cached?}".green) if @config.verbose
 
             resp_code = resp.code.to_i
-            if ((resp_code > 300 && resp_code < 400) && @config.warning_on_300s) || resp_code > 400
+            if resp_code > 400 || resp_code == 0
               response = resp
-
               detail = nil
               if response.status_message.nil?
                 message = response.return_message
@@ -145,20 +107,16 @@ module Blinkr
                 message = response.status_message
                 detail = response.return_message unless resp.return_message == 'No error'
               end
-
               severity = :danger
-              if response.code.to_i >= 300 && response.code.to_i < 400
-                severity = :warning
-              end
-
               metadata.each do |src|
+                next if response.success?
                 src[:page].errors << Blinkr::Error.new(severity: severity,
                                                        category: 'Broken link',
                                                        type: '<a href=""> target cannot be loaded',
                                                        url: url, title: "#{url} (line #{src[:line]})",
                                                        code: response.code.to_i, message: message,
                                                        detail: detail, snippet: src[:snippet],
-                                                       icon: 'fa-bookmark-o') unless response.success?
+                                                       icon: 'fa-bookmark-o')
               end
             end
             processed += 1
