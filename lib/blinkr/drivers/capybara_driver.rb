@@ -41,7 +41,7 @@ module Blinkr
 
     def remote_chrome
       sel_host = ENV['BLINKR_HOST'] || 'localhost'
-      sel_port = ENV['BLINKR_PORT'] || '4444'
+      sel_port = ENV['BLINKR_PORT'] || 4444
       Capybara.register_driver :selenium_remote_chrome do |app|
         capabilities = Selenium::WebDriver::Remote::Capabilities.chrome(
             chromeOptions: {
