@@ -27,22 +27,23 @@ module Blinkr
     private
 
     def wait_for_ajax_completion
-      wait_for_requests
-      # double check in case we've been redirected
-      sleep(2)
-      # double check no more events were triggered on redirect
-      wait_for_requests if requests? != 0
+      2.times {
+        wait_for_requests
+      }
     end
 
     def wait_for_requests
       Timeout.timeout(50) do
         active = requests?
-        js_loaded = js_loaded?
-        until active == 0 && js_loaded == 'complete'
+        page_load = js_loaded?
+        js_loaded = finished_all_ajax_requests?
+        until active == 0 && page_load == 'complete' && js_loaded
           active = requests?
           js_loaded = js_loaded?
         end
       end
+      # double check in case we've been redirected
+      sleep(2)
     end
 
     def requests?
@@ -51,6 +52,10 @@ module Blinkr
 
     def js_loaded?
       @browser.evaluate_script('document.readyState')
+    end
+
+    def finished_all_ajax_requests?
+      @browser.evaluate_script('jQuery.active').zero?
     end
 
     def js_errors
