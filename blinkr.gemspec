@@ -24,7 +24,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
   spec.required_ruby_version = '>= 2.2.2'
 
-  spec.add_dependency 'capybara', '~> 3.1'
+  spec.add_dependency 'capybara', '~> 3.1.1'
   spec.add_dependency 'nokogiri', '~> 1.8'
   spec.add_dependency 'typhoeus', '~> 1.3'
   spec.add_dependency 'slim', '~> 3.0', '>= 3.0.9'

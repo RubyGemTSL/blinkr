@@ -45,10 +45,10 @@ module Blinkr
       Capybara.register_driver :selenium_remote_chrome do |app|
         capabilities = Selenium::WebDriver::Remote::Capabilities.chrome(
             chromeOptions: {
-                args: ['no-sandbox',
-                       'allow-running-insecure-content',
-                       'ignore-certificate-errors',
-                       "user-agent=#{USER_AGENT_STRING}"]
+                args: ['--no-sandbox',
+                       '--allow-running-insecure-content',
+                       '--ignore-certificate-errors',
+                       "--user-agent=#{USER_AGENT_STRING}"]
             })
         Capybara::Selenium::Driver.new(
             app,
