@@ -76,7 +76,8 @@ module Blinkr
         req = Typhoeus::Request.new(url,
                                     opts.merge(followlocation: true, timeout: 60,
                                                cookiefile: '_tmp/cookies', cookiejar: '_tmp/cookies',
-                                               connecttimeout: 30, maxredirs: 3, ssl_verifypeer: false)
+                                               connecttimeout: 30, maxredirs: 3, ssl_verifypeer: false,
+                                               headers: { 'User-Agent' => 'Blinkr broken-link checker' })
                                    )
         req.on_complete do |resp|
           if retry? resp
