@@ -43,13 +43,15 @@ module Blinkr
       sel_host = ENV['GRID_HOST'] || 'localhost'
       sel_port = ENV['GRID_PORT'] || '4444'
       Capybara.register_driver :selenium_remote_chrome do |app|
+
         capabilities = Selenium::WebDriver::Remote::Capabilities.chrome(
-            chromeOptions: {
-                args: ['--no-sandbox',
-                       '--allow-running-insecure-content',
-                       '--ignore-certificate-errors',
-                       "--user-agent=#{USER_AGENT_STRING}"]
-            })
+            'goog:chromeOptions' => {
+                'args' => ['--no-sandbox',
+                           '--allow-running-insecure-content',
+                           '--ignore-certificate-errors',
+                           "--user-agent=#{USER_AGENT_STRING}"]
+            }
+        )
         Capybara::Selenium::Driver.new(
             app,
             browser: :remote,
