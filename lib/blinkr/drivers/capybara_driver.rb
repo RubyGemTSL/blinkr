@@ -46,7 +46,8 @@ module Blinkr
 
         capabilities = Selenium::WebDriver::Remote::Capabilities.chrome(
             'goog:chromeOptions' => {
-                'args' => ['--no-sandbox',
+                'args' => ['--headless',
+                           '--no-sandbox',
                            '--allow-running-insecure-content',
                            '--ignore-certificate-errors',
                            "--user-agent=#{USER_AGENT_STRING}"]

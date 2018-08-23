@@ -91,12 +91,12 @@ module Blinkr
 
       def check_links(browser, links)
         processed = 0
+        random_wait = [0.2, 0.5, 1, 1.5].sample
         @logger.info("Checking #{links.length} links".yellow)
         links.each do |url, metadata|
           browser.process(url, @config.max_retrys, method: :get, followlocation: true, timeout: 60, cookiefile: '_tmp/cookies',
                           cookiejar: '_tmp/cookies', connecttimeout: 30, maxredirs: 3) do |resp|
             @logger.info("Loaded #{url} via #{browser.name} #{'(cached)' if resp.cached?}".green) if @config.verbose
-
             resp_code = resp.code.to_i
             if resp_code > 400 || resp_code == 0
               response = resp
@@ -121,6 +121,7 @@ module Blinkr
             end
             processed += 1
             @logger.info("Processed #{processed} of #{links.size}".yellow) if @config.verbose
+            sleep(random_wait)
           end
         end
         browser.hydra.run if browser.is_a? Blinkr::TyphoeusWrapper

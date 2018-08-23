@@ -31,7 +31,12 @@ module Blinkr
     end
 
     def process(url, limit, opts = {}, &block)
-      _process(url, limit, limit, opts, &block)
+      ua = if @config.single_url || url.include?(@config.base_url)
+             "Blinkr broken-link checker"
+           else
+             "Blinkr broken-link checker: #{(0...8).map {(65 + rand(26)).chr}.join}"
+           end
+      _process(url, limit, limit, opts, ua, &block)
     end
 
     def debug(url)
@@ -71,14 +76,14 @@ module Blinkr
 
     private
 
-    def _process(url, limit, max, opts = {}, &block)
+    def _process(url, limit, max, opts = {}, ua, &block)
       unless @config.skipped? url
         req = Typhoeus::Request.new(url,
                                     opts.merge(followlocation: true, timeout: 60,
                                                cookiefile: '_tmp/cookies', cookiejar: '_tmp/cookies',
                                                connecttimeout: 30, maxredirs: 3, ssl_verifypeer: false,
-                                               headers: { 'User-Agent' => 'Blinkr broken-link checker' })
-                                   )
+                                               headers: {'User-Agent' => ua})
+        )
         req.on_complete do |resp|
           if retry? resp
             if resp.code.to_i == 0
@@ -103,7 +108,7 @@ module Blinkr
 
             if limit > 1
               @logger.info("Loading #{url} via typhoeus (attempt #{max - limit + 2} of #{max})".yellow)
-              _process(url, limit - 1, max, &Proc.new)
+              _process(url, limit - 1, max, ua, &Proc.new)
             else
               @logger.info("Loading #{url} via typhoeus failed".red)
               response = Typhoeus::Response.new(code: 0, status_message: "Server timed out after #{max} retries",
