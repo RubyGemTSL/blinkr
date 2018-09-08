@@ -91,7 +91,7 @@ module Blinkr
 
       def check_links(browser, links)
         processed = 0
-        random_wait = [0.2, 0.5, 1, 1.5].sample
+        random_wait = [0.2, 0.5, 1, 1.5, 2].sample
         @logger.info("Checking #{links.length} links".yellow)
         links.each do |url, metadata|
           browser.process(url, @config.max_retrys, method: :get, followlocation: true, timeout: 60, cookiefile: '_tmp/cookies',
