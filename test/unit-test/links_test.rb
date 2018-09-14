@@ -70,7 +70,7 @@ class TestBlinkr < Minitest::Test
       context.pages[@options[:base_url]] = @page
 
       browser = Blinkr::TyphoeusWrapper.new(@config, context)
-      links.analyze(context, browser)
+      links.analyze(browser)
       assert_equal(0, result.errors.size)
 
     end
@@ -90,7 +90,7 @@ class TestBlinkr < Minitest::Test
       context.pages[@options[:base_url]] = @page
 
       browser = Blinkr::TyphoeusWrapper.new(@config, context)
-      links.analyze(context, browser)
+      links.analyze(browser)
       assert_equal(10, result.errors.size)
     end
 
@@ -110,7 +110,7 @@ class TestBlinkr < Minitest::Test
       context.pages[@options[:base_url]] = @page
 
       browser = Blinkr::TyphoeusWrapper.new(@config, context)
-      links.analyze(context, browser)
+      links.analyze(browser)
       assert_equal(5, result.errors.size)
     end
   end

@@ -51,7 +51,7 @@ module Blinkr
       end
       @logger.info("Loaded #{page_count} pages using #{@config.browser}.".green) if @config.verbose
       @logger.info('Analyzing pages'.yellow)
-      analyze(context, bulk_browser)
+      analyze(bulk_browser)
       context.pages.reject! { |_, page| page.errors.empty? }
       context
     end
@@ -82,8 +82,8 @@ module Blinkr
       end
     end
 
-    def analyze(context, typhoeus)
-      execute :analyze, context, typhoeus
+    def analyze(typhoeus)
+      execute :analyze, typhoeus
     end
 
     def collect(page)
