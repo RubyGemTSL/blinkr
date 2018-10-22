@@ -17,7 +17,7 @@ class TestBlinkr < Minitest::Test
       options[:custom_sitemap] = "#{__dir__}/config/sitemap.xml"
       @config = Blinkr::Config.new(options)
       sitemap = Blinkr::Sitemap.new(@config).open_sitemap
-      assert_includes(sitemap.to_s, 'http://www.example.com/home')
+      assert_includes(sitemap.to_s, 'http://www.example.com/')
     end
 
     it 'should load the sitemap from the base url' do
@@ -27,7 +27,7 @@ class TestBlinkr < Minitest::Test
       @config = Blinkr::Config.new(options)
       sitemap = Blinkr::Sitemap.new(@config).open_sitemap
 
-      assert_includes(sitemap.to_s, 'test-site/blinkr.htm')
+      assert_includes(sitemap.to_s, 'test-site/home.htm')
     end
 
     it 'should returns sitemap locations' do

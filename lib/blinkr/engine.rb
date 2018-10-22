@@ -1,7 +1,6 @@
 require 'nokogiri'
-require 'blinkr/drivers/phantomjs_wrapper'
 require 'blinkr/drivers/capybara_wrapper'
-require 'blinkr/drivers/typhoeus_wrapper'
+require 'blinkr/drivers/rest_client_wrapper'
 require 'blinkr/http_utils'
 require 'blinkr/sitemap'
 require 'blinkr/report'
@@ -34,8 +33,8 @@ module Blinkr
 
       @logger.info("Fetching #{urls.size} pages from sitemap".yellow)
       browser.process_all(urls, @config.max_page_retrys) do |response, javascript_errors|
-        url = response.request.base_url
-        if response.success?
+        url = response.request.url
+        if response.code == 200
           @logger.info("Loaded page #{url}".green) if @config.verbose
           body = Nokogiri::HTML(response.body)
           page = OpenStruct.new(response: response,
@@ -57,15 +56,10 @@ module Blinkr
     end
 
     def define_browser(context)
-      bulk_browser = TyphoeusWrapper.new(@config, context)
-
-      if @config.browser == 'phantomjs'
-        browser = PhantomJSWrapper.new(@config, context)
-      else
-        $remote = true if @config.remote
-        browser = CapybaraWrapper.new(@config, context)
-      end
-      [bulk_browser, browser]
+      bulk_browser = RestClientWrapper.new(@config, context)
+      $remote = true if @config.remote
+      js_browser = CapybaraWrapper.new(@config, context)
+      [bulk_browser, js_browser]
     end
 
     def append(context)

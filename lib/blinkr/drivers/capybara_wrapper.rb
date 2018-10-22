@@ -1,4 +1,3 @@
-require 'typhoeus'
 require 'ostruct'
 require 'tempfile'
 require 'blinkr/http_utils'
@@ -6,10 +5,14 @@ require 'blinkr/cache'
 require 'parallel'
 require 'open3'
 require 'fileutils'
+require 'webmock'
 
 module Blinkr
   class CapybaraWrapper
     include HttpUtils
+    include WebMock::API
+    WebMock.enable!
+    WebMock.allow_net_connect!
 
     PAGE = File.expand_path('page.rb', File.dirname(__FILE__))
 
@@ -19,7 +22,6 @@ module Blinkr
       @config = config
       @context = context
       @count = 0
-      @cache = Blinkr::Cache.new
       @logger = Blinkr.logger
     end
 
@@ -42,38 +44,39 @@ module Blinkr
     def _process(url, limit, max, opts = {}, &block)
       raise "limit must be set. url: #{url}, limit: #{limit}, max: #{max}" if limit.nil?
       unless @config.skipped?(url)
-        # Try and sidestep any unnecessary requests by checking the cache
-        request = Typhoeus::Request.new(url)
-        if @cache.get(request)
-          return block.call(response, @cache.get("#{url}-javascriptErrors"))
-        end
-
         output, status = Open3.capture2(command + "#{url} #{$remote}")
-
         if status == 0
           json = JSON.parse(output)
-          response = Typhoeus::Response.new(code: 200, body: json['content'], effective_url: json['url'],
-                                            mock: true)
-          response.request = Typhoeus::Request.new(url)
-          Typhoeus.stub(url).and_return(response)
-          @cache.set(response.request, response)
-          @cache.set("#{url}-javascriptErrors", json['javascriptErrors'])
+          stub_url(200, json['content'], url)
+          response = get(url)
           block.call(response, json['javascriptErrors'])
         else
           if limit > 1
-            @logger.info("Loading #{url} via #{@config.browser} (attempt #{max - limit + 2} of #{max})".yellow)
+            @logger.info("Loading #{url} via chrome (attempt #{max - limit + 2} of #{max})".yellow)
             _process(url, limit - 1, max, &block)
           else
-            @logger.info("Loading #{url} via #{@config.browser} failed".red)
-            response = Typhoeus::Response.new(code: 0, status_message: "Server timed out after #{max} retries",
-                                              mock: true)
-            response.request = Typhoeus::Request.new(url)
-            Typhoeus.stub(url).and_return(response)
-            @cache.set(response.request, response)
+            @logger.info("Loading #{url} via chrome failed".red)
+            stub_url(0, "Server timed out after #{max} retries", url)
+            response = get(url)
             block.call(response, nil, nil)
           end
         end
-        @count += 1
+      end
+    end
+
+    def stub_url(status, body, url)
+      stub_request(:get, url).
+          with(headers: {
+              'Accept' => '*/*'
+          }).
+          to_return(status: status, body: body, headers: {})
+    end
+
+    def get(url)
+      begin
+        RestClient::Request.execute(method: :get, url: url, max_redirects: 6, timeout: 30, verify_ssl: false)
+      rescue RestClient::ExceptionWithResponse => err
+        err.response
       end
     end
   end

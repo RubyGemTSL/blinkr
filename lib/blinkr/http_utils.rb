@@ -3,7 +3,7 @@ require 'uri'
 module Blinkr
   module HttpUtils
     def sanitize(dest, src)
-      return nil if dest.nil? || src.nil?
+      return nil if dest.nil? || src.nil? || dest.include?('javascript:void(0)')
 
       # src is the page that tried to load the URL
       # URI fails to handle #! style fragments, so we chomp them
@@ -41,10 +41,6 @@ module Blinkr
         return nil
       end
       dest.chomp('#')
-    end
-
-    def retry?(resp)
-      resp.timed_out? || (resp.code == 0 && ['Server returned nothing (no headers, no data)', 'SSL connect error', 'Failure when receiving data from the peer'].include?(resp.return_message))
     end
 
     private

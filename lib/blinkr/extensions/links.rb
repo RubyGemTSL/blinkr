@@ -13,16 +13,15 @@ module Blinkr
         @config = config
         @collected_links = {}
         @logger = Blinkr.logger
+        @cached = {}
       end
 
       def collect(page)
         page.body.css('a[href]').each do |a|
           attr = a.attribute('href')
-          if page.response.effective_url[-1, 1] == '/'
-            src = page.response.effective_url
-          else
-            src = page.response.effective_url + '/'
-          end
+          (page.response.request.url[-1, 1] == '/') ?
+              src = page.response.request.url :
+              src = page.response.request.url + '/'
           url = attr.value
           next if @config.skipped?(url)
           url = sanitize(url, src)
@@ -55,7 +54,6 @@ module Blinkr
                                                           title: "#{url} (line #{location[:line]})",
                                                           code: nil,
                                                           message: 'Incorrect Environment',
-                                                          detail: 'Checked with Typheous',
                                                           snippet: location[:snippet],
                                                           icon: 'fa-bookmark-o')
             end
@@ -69,9 +67,9 @@ module Blinkr
 
       def get_links(links)
         if @config.ignore_external
-          links.select { |k| k.start_with? @config.base_url }
+          links.select {|k| k.start_with? @config.base_url}
         elsif @config.ignore_internal
-          links.reject { |k| k.start_with? @config.base_url }
+          links.reject {|k| k.start_with? @config.base_url}
         else
           links
         end
@@ -81,40 +79,29 @@ module Blinkr
         processed = 0
         @logger.info("Checking #{links.length} links".yellow)
         links.each do |url, metadata|
-          random_wait = [0.2, 0.5, 1, 1.5].sample
-            browser.process(url, @config.max_retrys, method: :get, followlocation: true, timeout: 60, cookiefile: '_tmp/cookies',
-                            cookiejar: '_tmp/cookies', connecttimeout: 30, maxredirs: 6) do |resp|
-              @logger.info("Loaded #{url} via #{browser.name} #{'(cached)' if resp.cached?}".green) if @config.verbose
-              resp_code = resp.code.to_i
-              if resp_code > 400 || resp_code == 0
-                sleep(10) if resp_code == 429
-                response = resp
-                detail = nil
-                if response.status_message.nil?
-                  message = response.return_message
-                else
-                  message = response.status_message
-                  detail = response.return_message unless resp.return_message == 'No error'
-                end
-                severity = :danger
+          if @cached.include?(url)
+            res = @cached[:"#{url}"][:response]
+          else
+            res = browser.process(url, @config.max_retrys)
+          end
+          (res.is_a? RestClient::Response) ? response = res : response = res.response
+          resp_code = response.code.to_i
+          if resp_code > 400 || resp_code == 0
+            severity = :danger
+            metadata.each do |src|
+              next if resp_code == 200
+              src[:page].errors << Blinkr::Error.new(severity: severity,
+                                                     category: 'Broken link',
+                                                     url: url, title: "#{url} (line #{src[:line]})",
+                                                     code: resp_code, message: res.message,
+                                                     icon: 'fa-bookmark-o')
 
-                metadata.each do |src|
-                  next if response.success?
-                  src[:page].errors << Blinkr::Error.new(severity: severity,
-                                                         category: 'Broken link',
-                                                         type: '<a href=""> target cannot be loaded',
-                                                         url: url, title: "#{url} (line #{src[:line]})",
-                                                         code: response.code.to_i, message: message,
-                                                         detail: detail, snippet: src[:snippet],
-                                                         icon: 'fa-bookmark-o')
-                end
-              end
-              processed += 1
-              @logger.info("Processed #{processed} of #{links.size}".yellow) if @config.verbose
-              sleep(random_wait)
             end
           end
-        browser.hydra.run if browser.is_a? Blinkr::TyphoeusWrapper
+          processed += 1
+          @cached["#{url}"] = {response: res}
+          @logger.info("Processed #{processed} of #{links.size}".yellow)
+        end
       end
     end
   end

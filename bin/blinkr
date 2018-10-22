@@ -24,10 +24,6 @@ OptionParser.new do |opts|
   opts.on('-v', '--verbose', 'Output debugging info to the console') do |opt|
     options[:verbose] = opt
   end
-  opts.on('-s', '--single-url URL', 'Test a single URL, outputting the response to the console') do |opt|
-    options[:single_url] = opt
-    options[:base_url] = opt
-  end
   opts.on('--ignore-external', 'Ignore external links') do |opt|
     options[:ignore_external] = opt
   end
@@ -55,7 +51,6 @@ if options[:gen]
     puts "Failed to generate config file: #{error}"
   end
 else
-  OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
   start = DateTime.now
   Blinkr.logger.info("Started at #{start}")
   exit_code = Blinkr.execute(options)

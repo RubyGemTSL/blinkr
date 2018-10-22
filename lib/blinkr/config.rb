@@ -23,17 +23,16 @@ module Blinkr
         remote: false, verbose: false
     }.freeze
 
-    AVAILABLE_BROWSERS = %w[chrome phantomjs].freeze
+    AVAILABLE_BROWSERS = %w[chrome].freeze
 
     def initialize(hash = {})
       super(DEFAULTS.merge(hash))
     end
 
     def validate
-      unless single_url
-        ignores.each { |ignore| raise 'An ignore must be a hash' unless ignore.is_a? Hash }
-        raise 'Must specify base_url' if base_url.nil?
-      end
+      ignores.each { |ignore| raise 'An ignore must be a hash' unless ignore.is_a? Hash }
+
+      raise 'Must specify base_url' if base_url.nil?
 
       unless AVAILABLE_BROWSERS.include?(browser)
         raise("'#{browser}' is not a supported browser.\n Supported browsers are: \n #{AVAILABLE_BROWSERS}")
