@@ -18,12 +18,7 @@ module Blinkr
                Blinkr::Config.new(options)
              end
 
-    if options[:single_url].nil?
-      context = Blinkr::Engine.new(config).run
-    else
-      Blinkr::TyphoeusWrapper.new(config, OpenStruct.new).debug(options[:single_url])
-    end
-
+    context = Blinkr::Engine.new(config).run
     status = generate_report(context, config)
     exit(status)
   end

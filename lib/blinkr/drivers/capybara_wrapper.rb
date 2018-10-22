@@ -1,15 +1,9 @@
-require 'ostruct'
-require 'tempfile'
-require 'blinkr/http_utils'
-require 'blinkr/cache'
 require 'parallel'
 require 'open3'
-require 'fileutils'
 require 'webmock'
 
 module Blinkr
   class CapybaraWrapper
-    include HttpUtils
     include WebMock::API
     WebMock.enable!
     WebMock.allow_net_connect!

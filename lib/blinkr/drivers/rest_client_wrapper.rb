@@ -1,27 +1,13 @@
-require 'blinkr/http_utils'
-require 'blinkr/cache'
-require 'fileutils'
-require 'ostruct'
-require 'open3'
-require 'parallel'
 require 'rest-client'
-require 'tempfile'
 
 module Blinkr
   class RestClientWrapper
-    include HttpUtils
 
     def initialize(config, context)
       @config = config
       @context = context
       @count = 0
       @logger = Blinkr.logger
-    end
-
-    def process_all(urls, limit, opts = {}, &block)
-      Parallel.each(urls, in_threads: (@config.threads || Parallel.processor_count * 2)) do |url|
-        process(url, limit, opts, &block)
-      end
     end
 
     def process(url, limit, opts = {}, &block)
@@ -39,10 +25,10 @@ module Blinkr
         rescue RestClient::ExceptionWithResponse => result
           if retries < max
             retries += 1
-            @logger.info("Loading #{url} (attempt #{retries} of #{max})".yellow)
+            @logger.info("Loading #{url} (attempt #{retries} of #{max})".yellow) if @config.verbose
             retry
           else
-            @logger.info("Loading #{url} failed".red)
+            @logger.info("Loading #{url} failed".red) if @config.verbose
             return result
           end
         end

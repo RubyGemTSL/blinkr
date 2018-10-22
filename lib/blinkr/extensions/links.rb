@@ -67,9 +67,9 @@ module Blinkr
 
       def get_links(links)
         if @config.ignore_external
-          links.select {|k| k.start_with? @config.base_url}
+          links.select { |k| k.start_with? @config.base_url }
         elsif @config.ignore_internal
-          links.reject {|k| k.start_with? @config.base_url}
+          links.reject { |k| k.start_with? @config.base_url }
         else
           links
         end
@@ -86,14 +86,15 @@ module Blinkr
           end
           (res.is_a? RestClient::Response) ? response = res : response = res.response
           resp_code = response.code.to_i
+          next if resp_code == 200
           if resp_code > 400 || resp_code == 0
-            severity = :danger
             metadata.each do |src|
-              next if resp_code == 200
-              src[:page].errors << Blinkr::Error.new(severity: severity,
+              src[:page].errors << Blinkr::Error.new(severity: :danger,
                                                      category: 'Broken link',
+                                                     type: '<a href=""> target cannot be loaded',
                                                      url: url, title: "#{url} (line #{src[:line]})",
-                                                     code: resp_code, message: res.message,
+                                                     code: response.code.to_i, message: res.message,
+                                                     detail: nil, snippet: src[:snippet],
                                                      icon: 'fa-bookmark-o')
 
             end

@@ -21,7 +21,6 @@ class TestBlinkr < Minitest::Test
       result = OpenStruct.new(response: response,
                               body: body.freeze,
                               errors: ErrorArray.new(@config),
-                              resource_errors: [],
                               javascript_errors: [])
       links = Blinkr::Extensions::Links.new(@config)
 
@@ -36,7 +35,6 @@ class TestBlinkr < Minitest::Test
       result = OpenStruct.new(response: response,
                               body: body.freeze,
                               errors: ErrorArray.new(@config),
-                              resource_errors: [],
                               javascript_errors: [])
       links = Blinkr::Extensions::Links.new(@config)
 
@@ -51,7 +49,6 @@ class TestBlinkr < Minitest::Test
       result = OpenStruct.new(response: response,
                               body: body.freeze,
                               errors: ErrorArray.new(@config),
-                              resource_errors: [],
                               javascript_errors: [])
       links = Blinkr::Extensions::Links.new(@config)
 
@@ -65,7 +62,6 @@ class TestBlinkr < Minitest::Test
       result = OpenStruct.new(response: response,
                               body: body.freeze,
                               errors: ErrorArray.new(@config),
-                              resource_errors: [],
                               javascript_errors: [])
       links = Blinkr::Extensions::Links.new(@config)
       links.collect(result)
@@ -86,7 +82,6 @@ class TestBlinkr < Minitest::Test
       result = OpenStruct.new(response: response,
                               body: body.freeze,
                               errors: ErrorArray.new(@config),
-                              resource_errors: [],
                               javascript_errors: [])
       links = Blinkr::Extensions::Links.new(@config)
       links.collect(result)
@@ -107,7 +102,6 @@ class TestBlinkr < Minitest::Test
       result = OpenStruct.new(response: response,
                               body: body.freeze,
                               errors: ErrorArray.new(@config),
-                              resource_errors: [],
                               javascript_errors: [])
       links = Blinkr::Extensions::Links.new(@config)
       links.collect(result)

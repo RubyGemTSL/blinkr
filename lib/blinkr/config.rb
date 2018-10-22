@@ -38,10 +38,6 @@ module Blinkr
         raise("'#{browser}' is not a supported browser.\n Supported browsers are: \n #{AVAILABLE_BROWSERS}")
       end
 
-      if browser == 'phantomjs' && remote
-        raise('phantomjs cannot be executed using a remote browser, remove the --remote commandline arg')
-      end
-
       self
     end
 
