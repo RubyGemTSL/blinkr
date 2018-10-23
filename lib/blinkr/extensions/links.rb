@@ -27,7 +27,7 @@ module Blinkr
           url = sanitize(url, src)
           unless url.nil?
             @collected_links[url] ||= []
-            @collected_links[url] << {page: page, line: attr.line, snippet: attr.parent.to_s}
+            @collected_links[url] << { page: page, line: attr.line, snippet: attr.parent.to_s }
           end
         end
         @links = get_links(@collected_links)
@@ -80,13 +80,13 @@ module Blinkr
         @logger.info("Checking #{links.length} links".yellow)
         links.each do |url, metadata|
           if @cached.include?(url)
+            @logger.info("Loaded #{url} from cache") if @config.verbose
             res = @cached[:"#{url}"][:response]
           else
             res = browser.process(url, @config.max_retrys)
           end
           (res.is_a? RestClient::Response) ? response = res : response = res.response
           resp_code = response.code.to_i
-          next if resp_code == 200
           if resp_code > 400 || resp_code == 0
             metadata.each do |src|
               src[:page].errors << Blinkr::Error.new(severity: :danger,
@@ -95,7 +95,7 @@ module Blinkr
                                                      url: url, title: "#{url} (line #{src[:line]})",
                                                      code: response.code.to_i, message: res.message,
                                                      detail: nil, snippet: src[:snippet],
-                                                     icon: 'fa-bookmark-o')
+                                                     icon: 'fa-bookmark-o') unless resp_code == 200
 
             end
           end

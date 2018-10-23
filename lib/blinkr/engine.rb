@@ -45,7 +45,7 @@ module Blinkr
           collect(page)
           page_count += 1
         else
-          @logger.warn("#{response.code} #{response.status_message} Unable to load page #{url} #{'(' + response.return_message + ')' unless response.return_message.nil?}".red)
+          @logger.warn("#{response.code}: Unable to load page #{url}".red)
         end
       end
       @logger.info("Loaded #{page_count} pages using #{@config.browser}.".green) if @config.verbose
