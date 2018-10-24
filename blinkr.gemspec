@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.email = %w[ian.ross.hamilton@gmail.com lightguard.jp@gmail.com pmuir@bleepbleep.org.uk]
   spec.summary = 'A simple broken link checker'
   spec.description = <<-EOF
-       A broken page and link checker for websites. Optionally uses chrome or phantomjs to render pages to check resource loading,
+       A broken page and link checker for websites. Uses headless chrome to render pages to check
        links created by JS, and report any JS page load errors.
   EOF
   spec.homepage = 'https://github.com/redhat-developer/blinkr'
@@ -26,7 +26,6 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'capybara', '~> 3.7.2'
   spec.add_dependency 'nokogiri', '~> 1.8'
-  spec.add_dependency 'typhoeus', '~> 1.3'
   spec.add_dependency 'rest-client', '~> 2.0'
   spec.add_dependency 'slim', '~> 3.0', '>= 3.0.9'
   spec.add_dependency 'parallel', '~> 1.12', '>= 1.12.1'

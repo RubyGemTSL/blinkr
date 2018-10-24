@@ -2,11 +2,11 @@ require 'rest-client'
 
 module Blinkr
   class RestClientWrapper
+    attr_reader :count
 
     def initialize(config, context)
       @config = config
       @context = context
-      @count = 0
       @logger = Blinkr.logger
     end
 

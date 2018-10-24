@@ -55,6 +55,7 @@ module Blinkr
             block.call(response, nil, nil)
           end
         end
+        @count += 1
       end
     end
 

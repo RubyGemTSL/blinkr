@@ -34,9 +34,11 @@ module Blinkr
       end
 
       def analyze(browser)
-        @logger.info("Found #{@links.size} links".yellow)
-        warn_incorrect_env(@links) unless @config.environments.empty?
-        check_links(browser, @links)
+        unless @links.nil?
+          @logger.info("Found #{@links.size} links".yellow)
+          warn_incorrect_env(@links) unless @config.environments.empty?
+          check_links(browser, @links)
+        end
       end
 
       private
