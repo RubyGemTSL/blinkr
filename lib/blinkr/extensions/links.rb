@@ -27,7 +27,7 @@ module Blinkr
           url = sanitize(url, src)
           unless url.nil?
             @collected_links[url] ||= []
-            @collected_links[url] << { page: page, line: attr.line, snippet: attr.parent.to_s }
+            @collected_links[url] << {page: page, line: attr.line, snippet: attr.parent.to_s}
           end
         end
         @links = get_links(@collected_links)
@@ -69,9 +69,9 @@ module Blinkr
 
       def get_links(links)
         if @config.ignore_external
-          links.select { |k| k.start_with? @config.base_url }
+          links.select {|k| k.start_with? @config.base_url}
         elsif @config.ignore_internal
-          links.reject { |k| k.start_with? @config.base_url }
+          links.reject {|k| k.start_with? @config.base_url}
         else
           links
         end
@@ -81,10 +81,21 @@ module Blinkr
         processed = 0
         @logger.info("Checking #{links.length} links".yellow)
         links.each do |url, metadata|
+          next if @config.skipped?(url)
           if @cached.include?(url)
-            @logger.info("Loaded #{url} from cache") if @config.verbose
+            @logger.info("Loaded #{url} from cache")
             res = @cached[:"#{url}"][:response]
           else
+            unless @last_checked.nil? || @last_checked.include?(@config[:base_url])
+              if @last_checked.include?(get_base(url))
+                timestamp = Time.now - @last_checked_timestamp
+                respect_robots_txt(url)
+                if timestamp < @delay
+                  @logger.info("Respecting the website robots.txt Crawl-delay, waiting for #{@delay - timestamp} second(s)")
+                  sleep(@delay - timestamp)
+                end
+              end
+            end
             res = browser.process(url, @config.max_retrys)
           end
           (res.is_a? RestClient::Response) ? response = res : response = res.response
@@ -97,14 +108,43 @@ module Blinkr
                                                      url: url, title: "#{url} (line #{src[:line]})",
                                                      code: response.code.to_i, message: res.message,
                                                      detail: nil, snippet: src[:snippet],
-                                                     icon: 'fa-bookmark-o') unless resp_code == 200
+                                                     icon: 'fa-bookmark-o')
 
             end
           end
           processed += 1
           @cached["#{url}"] = {response: res}
+          @last_checked = get_base(url)
+          @last_checked_timestamp = Time.now
           @logger.info("Processed #{processed} of #{links.size}".yellow)
         end
+      end
+
+      def respect_robots_txt(uri)
+        begin
+          Timeout::timeout(6) do
+            robots = URI.join(uri.to_s, "/robots.txt").open
+            robots.each do |line|
+              next if line =~ /^\s*(#.*|$)/
+              arr = line.split(":")
+              key = arr.shift
+              value = arr.join(":").strip
+              value.strip!
+              if key.downcase == 'crawl-delay'
+                @delay = value.to_i
+              else
+                @delay = 0
+              end
+            end
+          end
+        rescue Timeout::Error
+          @logger.warn('Timeout when accessing robots.txt')
+        end
+      end
+
+      def get_base(url)
+        uri = URI.parse(url)
+        "#{uri.scheme}://#{uri.host}"
       end
     end
   end

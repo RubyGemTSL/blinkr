@@ -21,7 +21,7 @@ URLS = %w(http://www.example.com/ http://www.example.com/internal-link-1/ http:/
 def stub_url(url, body, status)
   stub_request(:get, url).
       with(headers: {
-          'Accept'=>'*/*'
+          'Accept' => '*/*'
       }).
       to_return(status: status, body: body, headers: {})
 end
@@ -42,4 +42,15 @@ def get(url)
   rescue RestClient::ExceptionWithResponse => err
     err.response
   end
+end
+
+def mock_robots_txt(url)
+  stub_url("#{url}/robots.txt", robots, 200)
+end
+
+def robots
+  'User-agent: *
+Disallow: /auth/
+Disallow: /download-manager/
+Crawl-delay: 4'
 end

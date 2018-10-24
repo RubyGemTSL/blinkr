@@ -12,6 +12,7 @@ class TestBlinkr < Minitest::Test
       @options = {}
       @options[:base_url] = 'http://www.example.com'
       stub_url(@options[:base_url], @test_site, 200)
+      mock_robots_txt(@options[:base_url])
     end
 
     it 'should collect all inks from pages unless otherwise stated' do

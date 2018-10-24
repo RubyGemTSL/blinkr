@@ -19,18 +19,16 @@ module Blinkr
     def _process(url, limit, max, opts = {}, &block)
       raise "limit must be set. url: #{url}, limit: #{limit}, max: #{max}" if limit.nil?
       retries = 0
-      unless @config.skipped?(url)
-        begin
-           RestClient::Request.execute(method: :get, url: url, max_redirects: 6, timeout: 30, verify_ssl: false)
-        rescue RestClient::ExceptionWithResponse => result
-          if retries < max
-            retries += 1
-            @logger.info("Loading #{url} (attempt #{retries} of #{max})".yellow) if @config.verbose
-            retry
-          else
-            @logger.info("Loading #{url} failed".red) if @config.verbose
-            return result
-          end
+      begin
+        RestClient::Request.execute(method: :get, url: url, max_redirects: 6, timeout: 30, verify_ssl: false)
+      rescue RestClient::ExceptionWithResponse => result
+        if retries < max
+          retries += 1
+          @logger.info("Loading #{url} (attempt #{retries} of #{max})".yellow) if @config.verbose
+          retry
+        else
+          @logger.info("Loading #{url} failed".red) if @config.verbose
+          return result
         end
       end
     end
