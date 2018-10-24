@@ -30,9 +30,6 @@ OptionParser.new do |opts|
   opts.on('--ignore-internal', 'Ignore internal links') do |opt|
     options[:ignore_internal] = opt
   end
-  opts.on('--browser BROWSER', 'The Browser to use when running the checks. [default=chrome]') do |opt|
-    options[:browser] = opt
-  end
   opts.on('--remote', 'Run checks using remote browser') do |opt|
     options[:remote] = opt
   end

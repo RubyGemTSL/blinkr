@@ -19,7 +19,7 @@ Or install it yourself as:
 
     $ gem install blinkr
 
-If you wish to use [phantomjs](http://phantomjs.org/download.html) or [chrome](http://chromedriver.chromium.org/downloads) to render pages, install phantomjs and chromedriver for your platform and add it to your path. 
+You will need [chrome](http://chromedriver.chromium.org/downloads) to render pages, therfore you must add chromedriver for your platform to your path. 
 
 
 ## Quickstart
@@ -36,12 +36,14 @@ By default blinkr will check all links that are found on pages within your sitem
 ````
 $ bundle exec blinkr -h
 Usage: blinkr [options]
-    -g, --gen                    create a blinkr configuration file
-    -c, --config FILE            specify the config.yaml file
-    -u, --base-url URL           specify the URL of the site root
-    -s, --single-url URL         test a single URL, outputting the response to the console
-    --ignore-external            Ignore external links
-    --ignore-internal            Ignore internal links
+   -c, --config FILE            Specify the config.yaml file
+   -u, --base-url URL           Specify the URL of the site root
+   -v, --verbose                Output debugging info to the console
+   --gen                        Create a blinkr configuration file
+   --ignore-external            Ignore external links
+   --ignore-internal            Ignore internal links
+   --remote                     Run checks using remote browser
+
 ````
 
 As well as the above commandline options, Blinkr can be customised by creating a config file `blinkr.yml`. Using the blinkr configuration helper it is easy to generate a config file. 
