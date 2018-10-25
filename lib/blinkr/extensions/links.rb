@@ -82,7 +82,7 @@ module Blinkr
         @logger.info("Checking #{links.length} links".yellow)
         links.each do |url, metadata|
           next if @config.skipped?(url)
-          if @cached.include?(url)
+          if @cached.key?(url)
             @logger.info("Loaded #{url} from cache")
             res = @cached[:"#{url}"][:response]
           else
@@ -113,8 +113,7 @@ module Blinkr
             end
           end
           processed += 1
-          @cached["#{url}"] = {response: res}
-          @logger.info("#{@cached[:"#{url}"]} ????????????")
+          @cached[:"#{url}"] = {response: res}
           @last_checked = get_base(url)
           @last_checked_timestamp = Time.now
           @logger.info("Processed #{processed} of #{links.size}".yellow)
@@ -122,6 +121,7 @@ module Blinkr
       end
 
       def respect_robots_txt(uri)
+        @delay = 0
         begin
           Timeout::timeout(6) do
             robots = URI.join(uri.to_s, "/robots.txt").open
@@ -131,11 +131,7 @@ module Blinkr
               key = arr.shift
               value = arr.join(":").strip
               value.strip!
-              if key.downcase == 'crawl-delay'
-                @delay = value.to_i
-              else
-                @delay = 0
-              end
+              @delay = value.to_i if key.downcase == 'crawl-delay'
             end
           end
         rescue Timeout::Error

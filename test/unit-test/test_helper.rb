@@ -44,13 +44,13 @@ def get(url)
   end
 end
 
-def mock_robots_txt(url)
-  stub_url("#{url}/robots.txt", robots, 200)
+def mock_robots_txt
+  URLS.each do |url|
+    uri = URI.parse(url)
+    stub_url("#{uri.scheme}://#{uri.host}/robots.txt", robots, 200)
+  end
 end
 
 def robots
-  'User-agent: *
-Disallow: /auth/
-Disallow: /download-manager/
-Crawl-delay: 4'
+  'User-agent: *'
 end
