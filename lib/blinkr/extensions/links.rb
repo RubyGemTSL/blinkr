@@ -69,9 +69,9 @@ module Blinkr
 
       def get_links(links)
         if @config.ignore_external
-          links.select {|k| k.start_with? @config.base_url}
+          links.select { |k| k.start_with? @config.base_url }
         elsif @config.ignore_internal
-          links.reject {|k| k.start_with? @config.base_url}
+          links.reject { |k| k.start_with? @config.base_url }
         else
           links
         end
@@ -114,6 +114,7 @@ module Blinkr
           end
           processed += 1
           @cached["#{url}"] = {response: res}
+          @logger.info("#{@cached[:"#{url}"]} ????????????")
           @last_checked = get_base(url)
           @last_checked_timestamp = Time.now
           @logger.info("Processed #{processed} of #{links.size}".yellow)
