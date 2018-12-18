@@ -30,6 +30,12 @@ def stub_urls(type)
   URLS.each do |url|
     if type == 'broken'
       stub_url(url, "404: You've found something, but not the page you're looking for.", 404)
+    elsif type == 'socket'
+      stub_request(:get, url).
+          with(headers: {
+              'Accept' => '*/*'
+          }).
+          to_raise(SocketError)
     else
       stub_url(url, "200: All good", 200)
     end

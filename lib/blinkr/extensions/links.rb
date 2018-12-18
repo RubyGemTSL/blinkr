@@ -87,9 +87,10 @@ module Blinkr
             res = @cached[:"#{url}"][:response]
           else
             unless @last_checked.nil? || @last_checked.include?(@config[:base_url])
-              if @last_checked.include?(get_base(url))
+              url_base = get_base(url)
+              if @last_checked.include?(url_base)
                 timestamp = Time.now - @last_checked_timestamp
-                respect_robots_txt(url)
+                respect_robots_txt(url_base)
                 if timestamp < @delay
                   @logger.info("Respecting the website robots.txt Crawl-delay, waiting for #{@delay - timestamp} second(s)")
                   sleep(@delay - timestamp)
@@ -98,20 +99,25 @@ module Blinkr
             end
             res = browser.process(url, @config.max_retrys)
           end
-          (res.is_a? RestClient::Response) ? response = res : response = res.response
-          resp_code = response.code.to_i
-          if resp_code > 400 || resp_code == 0
-            metadata.each do |src|
-              src[:page].errors << Blinkr::Error.new(severity: :danger,
-                                                     category: 'Broken link',
-                                                     type: '<a href=""> target cannot be loaded',
-                                                     url: url, title: "#{url} (line #{src[:line]})",
-                                                     code: response.code.to_i, message: res.message,
-                                                     detail: nil, snippet: src[:snippet],
-                                                     icon: 'fa-bookmark-o')
 
-            end
+          if res == SocketError
+            resp_code = 503
+            message = 'Socket Error'
+          else
+            (res.is_a? RestClient::Response) ? response = res : response = res.response
+            resp_code = response.code.to_i
+            message = res.message if resp_code > 400 || resp_code == 0
           end
+          metadata.each do |src|
+            src[:page].errors << Blinkr::Error.new(severity: :danger,
+                                                   category: 'Broken link',
+                                                   type: '<a href=""> target cannot be loaded',
+                                                   url: url, title: "#{url} (line #{src[:line]})",
+                                                   code: resp_code, message: message,
+                                                   detail: nil, snippet: src[:snippet],
+                                                   icon: 'fa-bookmark-o')
+
+          end if resp_code > 400 || resp_code == 0
           processed += 1
           @cached[:"#{url}"] = {response: res}
           @last_checked = get_base(url)
@@ -123,19 +129,17 @@ module Blinkr
       def respect_robots_txt(uri)
         @delay = 0
         begin
-          Timeout::timeout(6) do
-            robots = URI.join(uri.to_s, "/robots.txt").open
-            robots.each do |line|
-              next if line =~ /^\s*(#.*|$)/
-              arr = line.split(":")
-              key = arr.shift
-              value = arr.join(":").strip
-              value.strip!
-              @delay = value.to_i if key.downcase == 'crawl-delay'
-            end
+          robots = URI.join(uri.to_s, "/robots.txt").open
+          robots.each do |line|
+            next if line =~ /^\s*(#.*|$)/
+            arr = line.split(":")
+            key = arr.shift
+            value = arr.join(":").strip
+            value.strip!
+            @delay = value.to_i if key.downcase == 'crawl-delay'
           end
-        rescue Timeout::Error
-          @logger.warn('Timeout when accessing robots.txt')
+        rescue => error
+          @logger.warn("#{error} when accessing robots.txt")
         end
       end
 
@@ -146,3 +150,4 @@ module Blinkr
     end
   end
 end
+
