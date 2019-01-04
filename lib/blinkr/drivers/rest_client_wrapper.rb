@@ -1,12 +1,7 @@
 require 'rest-client'
-require 'webmock'
 
 module Blinkr
   class RestClientWrapper
-    include WebMock::API
-    WebMock.enable!
-    WebMock.allow_net_connect!
-
     attr_reader :count
 
     def initialize(config, context)
@@ -48,31 +43,6 @@ module Blinkr
         RestClient::Request.execute(method: :get, url: url, max_redirects: 6, timeout: 30, verify_ssl: false)
       rescue RestClient::ExceptionWithResponse => err
         err.response
-      end
-    end
-  end
-
-  def stub(status, body, url)
-    stub_request(:get, url).
-        with(headers: {
-            'Accept' => '*/*'
-        }).
-        to_return(status: status, body: body, headers: {})
-  end
-
-  def foo(url)
-    retries = 0
-    begin
-      RestClient::Request.execute(method: :get, url: url, max_redirects: 6, timeout: 30, verify_ssl: false)
-    rescue RestClient::ExceptionWithResponse, SocketError => result
-      if retries < 3
-        stub(404, 'Not found', url) if result.class == SocketError
-        retries += 1
-        puts("Loading #{url} (attempt #{retries} of ")
-        retry
-      else
-        puts("Loading #{url} failed")
-        return result
       end
     end
   end
