@@ -95,7 +95,7 @@ class TestBlinkr < Minitest::Test
       assert_equal(10, result.errors.size)
     end
 
-    it "should handle invalid urls" do
+    it 'should handle invalid urls' do
       @config = Blinkr::Config.new(@options)
       response = get(@options[:base_url])
       body = Nokogiri::HTML(response.body)
@@ -110,6 +110,25 @@ class TestBlinkr < Minitest::Test
       context.pages[@options[:base_url]] = response.request.url
       browser = Blinkr::RestClientWrapper.new(@config, context)
       stub_urls('socket')
+      links.analyze(browser)
+      assert_equal(10, result.errors.size)
+    end
+
+    it 'should handle timeout errors' do
+      @config = Blinkr::Config.new(@options)
+      response = get(@options[:base_url])
+      body = Nokogiri::HTML(response.body)
+      result = OpenStruct.new(response: response,
+                              body: body.freeze,
+                              errors: ErrorArray.new(@config),
+                              javascript_errors: [])
+      links = Blinkr::Extensions::Links.new(@config)
+      links.collect(result)
+
+      context = OpenStruct.new(pages: {})
+      context.pages[@options[:base_url]] = response.request.url
+      browser = Blinkr::RestClientWrapper.new(@config, context)
+      stub_urls('timeout')
       links.analyze(browser)
       assert_equal(10, result.errors.size)
     end

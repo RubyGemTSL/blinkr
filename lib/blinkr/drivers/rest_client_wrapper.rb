@@ -35,7 +35,10 @@ module Blinkr
           retry
         else
           @logger.info("Loading #{url} failed".red) if @config.verbose
-          return result
+          (result.is_a?(RestClient::Exceptions::Timeout) || result.is_a?(RestClient::Exceptions::OpenTimeout)) ?
+              response = result.class :
+              response = result
+          return response
         end
       end
     end

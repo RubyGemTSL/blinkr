@@ -2,6 +2,7 @@ require 'blinkr'
 require 'minitest/reporters'
 require 'webmock/minitest'
 require 'mocha/minitest'
+require 'rest-client'
 reporter_options = {color: true}
 include WebMock::API
 Minitest::Reporters.use! [Minitest::Reporters::DefaultReporter.new(reporter_options)]
@@ -36,6 +37,12 @@ def stub_urls(type)
               'Accept' => '*/*'
           }).
           to_raise(SocketError)
+    elsif type == 'timeout'
+      stub_request(:get, url).
+          with(headers: {
+              'Accept' => '*/*'
+          }).
+          to_raise(RestClient::Exceptions::Timeout)
     else
       stub_url(url, "200: All good", 200)
     end

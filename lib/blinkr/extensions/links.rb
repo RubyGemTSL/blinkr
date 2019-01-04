@@ -14,6 +14,7 @@ module Blinkr
         @collected_links = {}
         @logger = Blinkr.logger
         @cached = {}
+        @robots_txt_cache = {}
       end
 
       def collect(page)
@@ -69,9 +70,9 @@ module Blinkr
 
       def get_links(links)
         if @config.ignore_external
-          links.select { |k| k.start_with? @config.base_url }
+          links.select {|k| k.start_with? @config.base_url}
         elsif @config.ignore_internal
-          links.reject { |k| k.start_with? @config.base_url }
+          links.reject {|k| k.start_with? @config.base_url}
         else
           links
         end
@@ -82,9 +83,9 @@ module Blinkr
         @logger.info("Checking #{links.length} links".yellow)
         links.each do |url, metadata|
           next if @config.skipped?(url)
-          if @cached.key?(url)
-            @logger.info("Loaded #{url} from cache")
-            res = @cached[:"#{url}"][:response]
+          if @cached.has_key?(url.chomp('/'))
+            @logger.info("Loaded #{url} from cache".green)
+            res = @cached["#{url.chomp('/')}"][:response]
           else
             unless @last_checked.nil? || @last_checked.include?(@config[:base_url])
               url_base = get_base(url)
@@ -98,11 +99,17 @@ module Blinkr
               end
             end
             res = browser.process(url, @config.max_retrys)
+            @cached["#{url.chomp('/')}"] = { response: res }
+            @last_checked = get_base(url)
+            @last_checked_timestamp = Time.now
           end
 
           if res == SocketError
             resp_code = 503
             message = 'Socket Error'
+          elsif res == RestClient::Exceptions::Timeout || res == RestClient::Exceptions::OpenTimeout
+            resp_code = 404
+            message = 'Not Found'
           else
             (res.is_a? RestClient::Response) ? response = res : response = res.response
             resp_code = response.code.to_i
@@ -119,9 +126,6 @@ module Blinkr
 
           end if resp_code > 400 || resp_code == 0
           processed += 1
-          @cached[:"#{url}"] = {response: res}
-          @last_checked = get_base(url)
-          @last_checked_timestamp = Time.now
           @logger.info("Processed #{processed} of #{links.size}".yellow)
         end
       end
@@ -129,8 +133,11 @@ module Blinkr
       def respect_robots_txt(uri)
         @delay = 0
         begin
-          robots = URI.join(uri.to_s, "/robots.txt").open
-          robots.each do |line|
+          unless @robots_txt_cache.has_key?(uri)
+            robots = URI.join(uri.to_s, "/robots.txt").open
+            @robots_txt_cache["#{uri}"] = { response: robots }
+          end
+          @robots_txt_cache["#{uri}"][:response].each do |line|
             next if line =~ /^\s*(#.*|$)/
             arr = line.split(":")
             key = arr.shift
@@ -150,4 +157,3 @@ module Blinkr
     end
   end
 end
-
