@@ -1,10 +1,12 @@
 # Blinkr
 
-A broken link checker for websites. Uses headless Chrome to render pages in order to check for broken links created by JS, and optionally report JavaScript errors. 
+A broken link checker for websites. Uses headless Chrome to render pages in order to check for broken links created by JS, and can (optionally) check for JavaScript errors. 
 
 Blinkr determines which pages to load from your `sitemap.xml`, once pages are loaded it will then use [RestClient](https://github.com/rest-client/rest-client) to check link status. Links are cached, therefore blinkr will not duplicate already checked links.
 
 Blinkr respects an external website's robots.txt file, in order to obey the site rules for Crawl-delay, and prevent overloading servers with too many requests. 
+
+At the end of the checks, if your site contains broken links an html report will be generated that will include any broken links (more below).
 
 ## Installation
 
@@ -100,8 +102,8 @@ ignores:
 # Warn if links are using an incorrect environment, for example staging environment using production links that may interfere with site stats:
 # For example, your base_url: https://staging.environment.com
 # list elements as string:
-#  - https://prodcution.redhat.com
-#  - https://production-drupal.com
+#  - https://prodcution.foo.com
+#  - https://production-foo.drupal.com
 #
 environments:
 
