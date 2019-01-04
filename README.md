@@ -143,17 +143,17 @@ blinkr -c path/to/my/config/staging_blinkr.yml
 If you want to see more details about the URLs blinkr is checking, you can use
 the `-v` option:
 
-`bundle exec blinkr -c path/to/my/config/my_blinkr.yml -u https://developers.redhat.com -v`
+`bundle exec blinkr -c path/to/my/config/my_blinkr.yml -u https://foo..com -v`
 
 If you need to debug why a particular URL is being reported as bad using
 blinkr, but works in your web browser, you can load a single URL using typhoeus:
 
 ````
-bundle exec blinkr -s http://www.acme.com/corp
+bundle exec blinkr -s http://www.foo.com/bar
 ````
 
 ## History
-Blinkr was originally created by [Pete Muir](https://github.com/pmuir), however as he is no longer maintaining Blinkr, we at the Red Hat Developer Program have decided to resurrect it. Thank you to Pete for your hard work in creating this tool.
+Blinkr was originally created by [Pete Muir](https://github.com/pmuir), however as he is no longer maintaining Blinkr, we at the Red Hat Developer Program have decided to resurrect it. Thank you to Pete for your hard work in kicking off the work on this.
 
 ## Contributing
 
