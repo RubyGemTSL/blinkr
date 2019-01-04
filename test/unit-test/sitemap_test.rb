@@ -1,6 +1,5 @@
 require_relative '../../test/unit-test/test_helper'
 require 'minitest/autorun'
-require 'mocha/mini_test'
 require 'blinkr/sitemap'
 
 class TestBlinkr < Minitest::Test
@@ -13,26 +12,25 @@ class TestBlinkr < Minitest::Test
       Blinkr::Sitemap.send(:public, :open_sitemap)
     end
 
-    it 'loads sitemap from locally stored sitemap' do
+    it 'should load a sitemap from a locally stored sitemap.xml file' do
       options = {}
-      options[:base_url] = 'http://www.example.com'
-      options[:sitemap] = "#{__dir__}/config/sitemap.xml"
+      options[:custom_sitemap] = "#{__dir__}/config/sitemap.xml"
       @config = Blinkr::Config.new(options)
       sitemap = Blinkr::Sitemap.new(@config).open_sitemap
-      assert_includes(sitemap.to_s, 'http://www.example.com/home')
+      assert_includes(sitemap.to_s, 'http://www.example.com/')
     end
 
-    it 'loads sitemap from URL' do
+    it 'should load the sitemap from the base url' do
       options = {}
       options[:base_url] = 'http://www.example.com'
       stub_request(:get, "#{options[:base_url]}/sitemap.xml").to_return(status: 200, body: sitemap_stub, :headers => {})
       @config = Blinkr::Config.new(options)
       sitemap = Blinkr::Sitemap.new(@config).open_sitemap
 
-      assert_includes(sitemap.to_s, 'test-site/blinkr.htm')
+      assert_includes(sitemap.to_s, 'test-site/home.htm')
     end
 
-    it 'returns sitemap locations' do
+    it 'should returns sitemap locations' do
       options = {}
       options[:base_url] = 'http://www.example.com'
       stub_request(:get, "#{options[:base_url]}/sitemap.xml").to_return(status: 200, body: sitemap_stub, :headers => {})
@@ -40,6 +38,5 @@ class TestBlinkr < Minitest::Test
       sitemap = Blinkr::Sitemap.new(@config)
       assert_equal(1, sitemap.sitemap_locations.size)
     end
-
   end
 end

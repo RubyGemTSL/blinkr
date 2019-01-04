@@ -8,7 +8,8 @@ module Blinkr
     end
 
     def sitemap_locations
-      open_sitemap.css('loc').collect(&:content)
+      sitemap = open_sitemap.css('loc').collect(&:content)
+      sitemap.uniq
     end
 
     private

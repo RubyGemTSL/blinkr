@@ -1,13 +1,11 @@
 require 'colorize'
+require 'logger'
 
+# global logger for blinkr.
 module Blinkr
   class << self
-    attr_writer :logger
-
-    def logger
-      @logger ||= Logger.new($stdout).tap do |log|
-        log.progname = name
-      end
-    end
+    attr_accessor :logger
   end
 end
+
+Blinkr.logger = Logger.new(STDOUT)

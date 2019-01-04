@@ -6,13 +6,13 @@ require 'fileutils'
 module Blinkr
   class Report
     require 'colorize'
-    TMPL = File.expand_path('report.html.slim', File.dirname(__FILE__))
+    HTML_REPORT_TMPL = File.expand_path('report.html.slim', File.dirname(__FILE__))
 
-    def self.render(context, engine, config) end
+    def self.render(context, config)
+    end
 
-    def initialize(context, engine, config)
+    def initialize(context, config)
       @context = context
-      @engine = engine
       @config = config
       @logger = Blinkr.logger
     end
@@ -24,13 +24,11 @@ module Blinkr
       @context.type = {}
       @context.pages.each do |url, page|
         page.url = url
-        page.max_severity = ::Blinkr::SEVERITY.first # :success
+        page.max_severity = ::Blinkr::SEVERITY.first
         page.severities = []
         page.categories = []
         page.types = []
         page.errors.each do |error|
-          raise("#{error.severity} not a valid severity. Must be one of #{::Blinkr::SEVERITY.join(',')}") unless ::Blinkr::SEVERITY.include? error.severity
-          raise("#{error.category} must be specified.") if error.category.nil?
           @context.total += 1
           @context.severity[error.severity] ||= OpenStruct.new(count: 0)
           @context.severity[error.severity].count += 1
@@ -49,19 +47,12 @@ module Blinkr
       end
       @context.pages = @context.pages.values
       File.open(@config.report, 'w') do |file|
-        file.write(Slim::Template.new(TMPL).render(OpenStruct.new(blinkr: @context, engine: @engine, errors: @context.to_json)))
+        file.write(Slim::Template.new(HTML_REPORT_TMPL).render(OpenStruct.new(blinkr: @context, errors: @context.to_json)))
       end
-      if @context.total > 0
-        @context.severity[:danger].nil? ? danger = 0 : danger = @context.severity[:danger].count
-        @context.severity[:warning].nil? ? warning = 0 : warning = @context.severity[:warning].count
-        puts("Completed with a total of " + "#{danger} errors".red + " and " + "#{warning} warnings".yellow)
-        File.open('blinkr_errors.json', 'w') do |file|
-          file.write(@context.to_json)
-        end
-      else
-        puts('Completed with no errors or warnings'.green)
-      end
-      puts("Wrote report to #{@config.report}") if @config.verbose
+      @context.severity[:danger].nil? ? danger = 0 : danger = @context.severity[:danger].count
+      @context.severity[:warning].nil? ? warnings = 0 : warnings = @context.severity[:warning].count
+
+      [danger, warnings]
     end
   end
 end

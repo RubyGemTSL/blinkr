@@ -1,37 +1,58 @@
 require 'ostruct'
+require 'uri'
+require 'erb'
+require 'yaml'
 
 module Blinkr
+  #
+  # This class generates a default config, or merges user specified custom
+  # config settings.
+  #
   class Config < OpenStruct
+
     def self.read(file, args)
-      raise("Cannot read #{file}") unless File.exist?(file)
-      Config.new(YAML.load_file(file).merge(args).merge(config_file: file))
+      raise("Cannot read #{file}, config file does not exist.") unless File.exist?(file)
+      config = YAML.load(ERB.new(File.read(file)).result)
+      Config.new(config.merge(args).merge(config_file: file))
     end
 
-    DEFAULTS = { skips: [], ignores: [], environments: [], max_retrys: 3,
-                browser: 'phantomjs', viewport: 1200, phantomjs_threads: 10,
-                report: 'blinkr.html', warning_on_300s: false,
-                ignore_internal: false, ignore_external: false,
-                warn_js_errors: false, warn_inline_css: false,
-                ignore_ssl: false, warn_resource_errors: false }.freeze
+    DEFAULTS = {
+        skips: [], ignores: [], environments: [], max_retrys: 3,
+        browser: 'chrome', threads: 10, report: 'blinkr.html',
+        ignore_internal: false, ignore_external: false, js_errors: false,
+        remote: false, verbose: false
+    }.freeze
+
+    AVAILABLE_BROWSERS = %w[chrome].freeze
 
     def initialize(hash = {})
       super(DEFAULTS.merge(hash))
     end
 
     def validate
-      unless single_url
-        ignores.each { |ignore| raise 'An ignore must be a hash' unless ignore.is_a? Hash }
-        raise 'Must specify base_url' if base_url.nil?
-        raise 'Must specify sitemap' if sitemap.nil?
+      ignores.each { |ignore| raise 'An ignore must be a hash' unless ignore.is_a? Hash }
+
+      raise 'Must specify base_url' if base_url.nil?
+
+      unless AVAILABLE_BROWSERS.include?(browser)
+        raise("'#{browser}' is not a supported browser.\n Supported browsers are: \n #{AVAILABLE_BROWSERS}")
       end
+
       self
     end
 
     def sitemap
-      if super.nil?
+      if custom_sitemap.nil?
+        base_url << '/' if base_url[-1] != '/'
         URI.join(base_url, 'sitemap.xml').to_s
       else
-        super
+        uri = URI(custom_sitemap)
+        unless uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)
+          unless File.exist?(custom_sitemap)
+            raise "Unable to find file named #{custom_sitemap}"
+          end
+        end
+        custom_sitemap
       end
     end
 
@@ -48,7 +69,6 @@ module Blinkr
       snippet = error.snippet
 
       ignores.any? do |ignore|
-
         if ignore.key? 'url'
           return true if ignore['url'].is_a?(Regexp) && url && ignore['url'] =~ url
           return true if ignore['url'] == url
@@ -83,6 +103,5 @@ module Blinkr
       end
       end
     end
-
   end
 end

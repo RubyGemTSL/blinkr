@@ -1,10 +1,10 @@
 # Blinkr
 
-A broken page and link checker for websites. Optionally uses phantomjs to render pages
-to check resource loading, links created by JS, and report any JS page load errors.
+A broken link checker for websites. Uses headless Chrome to render pages in order to check for broken links created by JS, and optionally report JavaScript errors. 
 
-typhoeus, which can execute up to 200 parallel requests, and cache the results is used
-to check links.
+Blinkr determines which pages to load from your `sitemap.xml`, once pages are loaded it will then use [RestClient](https://github.com/rest-client/rest-client) to check link status. Links are cached, therefore blinkr will not duplicate already checked links.
+
+Blinkr respects an external website's robots.txt file, in order to obey the site rules for Crawl-delay, and prevent overloading servers with too many requests. 
 
 ## Installation
 
@@ -14,178 +14,154 @@ Add this line to your application's Gemfile:
 
 And then execute:
 
-    $ bundle
+    $ bundle install
 
 Or install it yourself as:
 
     $ gem install blinkr
 
-If you wish to use phantomjs, install phantomjs for your platform 
-http://phantomjs.org/download.html
+You will need [chrome](http://chromedriver.chromium.org/downloads) to render pages, therefore you must add chromedriver to your path. Optionally you can use docker-selenium as a remote browser. For example;
 
-## Usage
+      ENV['GRID_HOST'] = your selenium grid or standalone host (defaults to 'localhost')
+      ENV['GRID_PORT'] = your selenium grid or standalone port (defaults to '4444')
 
-Blinkr determines which pages to load from your `sitemap.xml`. To run blinkr 
-against your site checking every `a[href]` link on all your pages:
 
-````
-blinkr -u http://www.jboss.org
-````
+## Quickstart
 
-If you want to customize blinkr, create a config file `blinkr.yaml`. For example:
-
+To run blinkr against your site checking every `a[href]` link on all your pages:
 
 ````
-# Links and pages not to check (may be a regexp or a string)
+bundle exec blinkr -u https://developers.redhat.com
+````
+
+## Configuration
+By default blinkr will check all links that are found on pages within your sitemap. To see the command line interface help just type the following command in your terminal:
+````
+$ bundle exec blinkr -h
+Usage: blinkr [options]
+   -c, --config FILE            Specify the config.yaml file
+   -u, --base-url URL           Specify the URL of the site root
+   -v, --verbose                Output debugging info to the console
+   --gen                        Create a blinkr configuration file
+   --ignore-external            Ignore external links
+   --ignore-internal            Ignore internal links
+   --remote                     Run checks using remote browser
+
+````
+
+As well as the above commandline options, Blinkr can be customised by creating a config file `blinkr.yml`. Using the blinkr configuration helper it is easy to generate a config file. 
+
+Just run: `bundle exec blinkr --gen`
+
+The following `blinkr.yml` file will be generated. NOTE, this includes all available config options. Custom configurations are merged with the default config therefore you may customise one or more configuration options - just remove options not applicable to you.
+
+```` 
+#
+# The URL to check (often specified on the command line)
+#
+base_url: https://www.example.com
+
+#
+# Specify a sitemap to use, rather than the default <base_url>/sitemap.xml
+# Can be a url or a .xml file
+# example of alternative url sitemap:
+# custom_sitemap: https://www.foo.com/my_sitemap.xml
+# example of local sitemap file, use ruby to specify the location of the sitemap.xml file
+# <% sitemap_loc = "#{File.dirname(File.expand_path('.', __FILE__))}/local-sitemap.xml" %>
+#custom_sitemap: <%= sitemap_loc %>
+#
+custom_sitemap: https://www.foo.com/my_sitemap.xml
+
+#
+# Links and pages not to check (may be a regexp or a string).
+# skips:
+#  - !ruby/regexp /^https:\/\/developers\.redhat\.com\/quickstarts\.*\/.*/
+#  - https://developers.redhat.com/dont/test/me
+#
 skips:
-  - !ruby/regexp /^\/video\/((?!91710755).)*\/$/
-  - !ruby/regexp /^\/quickstarts\/((?!eap\/kitchensink).)*\/*$/
-  - !ruby/regexp /^\/boms\/((?!eap\/jboss-javaee-6_0).)*\/*$/
-  - !ruby/regexp /^\/archetypes\/((?!eap\/jboss-javaee6-webapp-archetype).)*\/*$/
 
+#
 # Errors to ignore when generating the output. Each ignore should be a hash
 # containing a url (may be regexp or a string), an error code (integer) and a
 # error message (may be a regexp or a string)
+#ignores:
+   # - url: http://www.acme.com/foo
+   # - url: !ruby/regexp /^https?:\/\/(www\.)?acme\.com\/bar\/
+   #  message: Not Found
+   #  code: 500
+#
 ignores:
-  - url: http://www.acme.com/foo
-    message: Not Found
-  - url: !ruby/regexp /^https?:\/\/(www\.)?acme\.com\/bar\/
-    code: 500
 
-# The output file to write the report to
-report: _tmp/blinkr.html
+#
+# Warn if links are using an incorrect environment, for example staging environment using production links that may interfere with site stats:
+# For example, your base_url: https://staging.environment.com
+# list elements as string:
+#  - https://prodcution.redhat.com
+#  - https://production-drupal.com
+#
+environments:
 
-# The URL to check (often specificed on the command line)
-base_url: http://www.jboss.org
+#
+#
+threads: 10
 
-# Specify the URL to the sitemap to use, rather than the default <base_url>/sitemap.xml
-sitemap: http://www.jboss.org/my_sitemap.xml
-
-# Specify the 'browser' used to load each page from the sitemap. By default 
-# typhoeus is used, which will fetch the sources of each page in parallel 
-# (fast). 
-# Alternatively, you can use phantomjs, which will process the javascript and
-# CSS. This allows any links generated by javascript as well as any resources
-# loaded by the page/javascript to be checked. Additionally, any JS errors are
-# reported. To use phantomjs, you must make sure the native binary is available
-# on your path.
-browser:phantomjs
-
+#
 # The number of times to try reloading a link, if the server doesn't respond or
 # refuses the connection. If the retry limit is exceeded, it will be reported as
 # 'Server timed out' in the report. By default 3.
+#
 max_retrys: 3
 
-# The number times to try reloading a page. You may want to increase this if you
-# find errors in the console that a page cannot be loaded
-max_page_retrys: 3
+#
+# set to true if you only want to test external urls. Internal urls are anything that contains the base_url
+#
+ignore_internal: false
 
-# Allows blinkr to ignore fragments (#foo) which can reduce the number of URLs
-# to check. By default false.
-ignore_fragments: true
+#
+# set to true if you only want to test internal urls. Internal urls are anything that contains the base_url
+#
+ignore_external: false
 
-# Control the number of threads used to run phantomjs. By default 8.
-phantomjs_threads: 8
+#
+# Set to true if you wish to report any js-errors found in the console.
+#
+warn_js_errors: false
 
-# Export the report to phantomjs
+#
+# The output file to write the report to
+#
+report: 'blinkr.html'
 
 ````
 
 You can specify a custom config file on the command link:
 
 ````
-blinkr -c my_blinkr.yaml
+blinkr -c path/to/my/config/staging_blinkr.yml
 ````
 
 If you want to see more details about the URLs blinkr is checking, you can use
 the `-v` option:
 
-blinkr -u http://www.jboss.org -v
+`bundle exec blinkr -c path/to/my/config/my_blinkr.yml -u https://foo..com -v`
 
 If you need to debug why a particular URL is being reported as bad using
 blinkr, but works in your web browser, you can load a single URL using typhoeus:
 
 ````
-blinkr -c my_blinkr.yaml -s http://www.acme.com/corp
+bundle exec blinkr -s http://www.foo.com/bar
 ````
 
-Additionally, you can specify the `-w` option to tell libcurl to run in verbose
-mode (this is very verbose, so normally used with `-s`):
-
-````
-blinkr -c my_blinkr.yaml -s http://www.acme.com/corp -v
-````
-
-## Extending Blinkr
-
-Blinkr is based around a pipeline. Issues with the pages are *collected*, 
-*analysed*, and then passed to the report for *transformation* and rendering.
-Additional sections may *appended* to the report.
-
-To add extensions to blinkr, you need to define a custom pipeline. The pipeline
-is defined in a ruby file (e.g. `blinkr.rb`)
-
-````
-require 'acme/spellcheck'
-
-Blinkr::Extensions::Pipeline.new do |config|
-  # define the default extensions
-  extension Blinkr::Extensions::Links.new config
-  extension Blinkr::Extensions::JavaScript.new config
-  extension Blinkr::Extensions::Resources.new config
-
-  # define custom extensions
-  extension ACME::Extensions::SpellCheck.new config
-end
-````
-
-NOTE: You must add the default extensions to a custom pipeline, for them to be
-executed.
-
-The pipeline is defined in `blinkr.yaml`:
-
-````
-# Use a custom pipeline
-pipeline: blinkr.rb
-````
-
-An extension is just a standard Ruby class. It should declare an 
-`initialize(config)` method, and may declare one or more of:
-
-* `collect(page)`
-* `analyze(context, typhoeus)`
-* `transform(page, error, default_html)`
-* `append(context)`
-
-Each method is called as the pipeline progresses. Arguments passed are:
-
-* `page` - a object containing the tyhpoeus `response`, the page `body` (as a
-  Nokogiri HTML document), an array of `errors` for the page, any 
-  `resource_errors` which ocurred when the page was loaded, and any 
-  `javascript_errors` which ocurred when the page was loaded
-* `context` - a map of `url` => `page`s which are being analysed. After the
-  analyze phase, and before the transform phase, any pages with no errors
-  are removed from the context
-* `typhoeus` - a wrapper around typhoeus, defining a `process` method and 
-  a `process_all` method, both of which take a `url` and a `retry` limit, and
-  accept a block to execute when a response is returned.
-* `error` - an individual error, consisting of a `type`, a `url`, a `title`, a
-  `code`, a `message`, a `detail`, a `snippet` and an fontawesome `icon` class
-* `default_html` - the default HTML used to display the error
-
-`transform` should return the HTML used to display the error. `append` should 
-return any HTML to be appended to the report. A templating language, such as
-slim or haml may be used to generate the HTML.
-
-The build extensions, in lib/blinkr/extensions are good examples of how 
-extensions can perform broken link analysis, or collect and format resource
-loading and javascript execution errors.
+## History
+Blinkr was originally created by [Pete Muir](https://github.com/pmuir), however as he is no longer maintaining Blinkr, we at the Red Hat Developer Program have decided to resurrect it. Thank you to Pete for your hard work in kicking off the work on this.
 
 ## Contributing
 
-1. Fork it ( http://github.com/pmuir/blinkr/fork )
+Please feel free to help us improve Blinkr!
+
+1. Fork it ( https://github.com/redhat-developer/blinkr/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Test it, this is important! to run the existing tests (`bundle exec rake test`), however please create unit-test's for new features.
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
-

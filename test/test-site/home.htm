@@ -11,7 +11,7 @@
         function load() {
             slow_link = document.createElement("a");
             some_text = document.createTextNode("Internal slow link");
-            slow_link.setAttribute('href', 'http://www.example.com/internal-link-6');
+            slow_link.setAttribute('href', '../internal-link-6/');
             slow_link.setAttribute('class', 'slow');
             slow_link.appendChild(some_text);
             dumping_ground = document.getElementById('dumping_ground');
@@ -25,14 +25,14 @@
 </head>
 <body>
 <h1>Blinkr</h1>
-<span class='welcome'>A broken page and link checker for websites. Optionally uses phantomjs to render pages to check resource loading, links created by JS, and report any JS page load errors.</span>
+<span class='welcome'>A broken page and link checker for websites. Optionally uses phantomjs or chrome to render pages to check resource loading, links created by JS, and report any JS page load errors.</span>
 <table>
     <tr>
-        <td><a href='http://www.example.com/internal-link-1'>Link One</a></td>
-        <td><a href='http://www.example.com/internal-link-2'>Link Two</a></td>
-        <td><a href='http://www.example.com/internal-link-3'>Link Three</a></td>
-        <td><a href='http://www.example.com/internal-link-4'>Link Four</a></td>
-        <td><a href='http://www.example.com/internal-link-5'>Link Five</a></td>
+        <td><a href='../internal-link-1/'>Link One</a></td>
+        <td><a href='../internal-link-2/'>Link Two</a></td>
+        <td><a href='../internal-link-3/'>Link Three</a></td>
+        <td><a href='../internal-link-4/'>Link Four</a></td>
+        <td><a href='../internal-link-5/'>Link Five</a></td>
     </tr>
 </table>
 

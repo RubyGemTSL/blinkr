@@ -1,0 +1,80 @@
+# config/blinkr.yml
+# YAML Template
+# The blinkr.yml file is preprocessed by ERb; this allows you to use ruby code to generate values in your blinkr.yml files.
+# So if you have several config files with similar values you could do something like:
+# <% sitemap_loc = "#{File.dirname(File.expand_path('.', __FILE__))}/critical-links-sitemap.xml" %>
+# custom_sitemap: <%= sitemap_loc %>
+
+# BEGIN
+#
+# The URL to check (often specified on the command line)
+#
+base_url: https://www.example.com
+
+#
+# Links and pages not to check (may be a regexp or a string).
+# skips:
+#  - !ruby/regexp /^https:\/\/developers\.redhat\.com\/quickstarts\.*\/.*/
+#  - https://developers.redhat.com/dont/test/me
+#
+skips:
+
+#
+# Errors to ignore when generating the output. Each ignore should be a hash
+# containing a url (may be regexp or a string), an error code (integer) and a
+# error message (may be a regexp or a string)
+# ignores:
+   # - url: http://www.acme.com/foo
+   # - url: !ruby/regexp /^https?:\/\/(www\.)?acme\.com\/bar\/
+   #  message: Not Found
+   #  code: 500
+#
+ignores:
+
+#
+# Warn if links are using an incorrect environment, for example staging environment using production links that may interfere with site stats:
+# For example, your base_url: https://staging.environment.com
+# list elements as string:
+#  - https://prodcution.redhat.com
+#  - https://production-drupal.com
+#
+environments:
+
+#
+# Use docker-blinkr remote browser
+#
+remote: false
+
+#
+#
+threads: 10
+
+
+#
+# The number of times to try reloading a link or page, if the server doesn't respond or
+# refuses the connection. If the retry limit is exceeded, it will be reported as
+# 'Server timed out' in the report. By default 3.
+#
+max_retrys: 3
+
+#
+# set to true if you only want to test external urls. Internal urls are anything that contains the base_url
+#
+ignore_internal: false
+
+#
+# set to true if you only want to test internal urls. Internal urls are anything that contains the base_url
+#
+ignore_external: false
+
+#
+# Set to false if you do not wish to report any js-errors found in the console.
+#
+js_errors: false
+
+#
+# The output file to write the report to
+#
+report: results/blinkr.html
+
+# END
