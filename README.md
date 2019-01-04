@@ -20,8 +20,12 @@ Or install it yourself as:
 
     $ gem install blinkr
 
-You will need [chrome](http://chromedriver.chromium.org/downloads) to render pages, therefore you must add chromedriver to your path. Optionally you can use docker-selenium as a remote browser. For example;
+You will need [chrome](http://chromedriver.chromium.org/downloads) to render pages, therefore you must add chromedriver to your path. Optionally for speed and ease of use you can use [docker-selenium](https://github.com/SeleniumHQ/docker-selenium) as a remote browser. For example;
 
+      $ docker run -d -p 4444:4444 -v /dev/shm:/dev/shm selenium/standalone-chrome:3.141.59-dubnium
+
+Use your own grid, or standalone server by setting the following environment variables.      
+      
       ENV['GRID_HOST'] = your selenium grid or standalone host (defaults to 'localhost')
       ENV['GRID_PORT'] = your selenium grid or standalone port (defaults to '4444')
 
