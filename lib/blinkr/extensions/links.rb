@@ -81,7 +81,7 @@ module Blinkr
       def check_links(browser, links)
         processed = 0
         @logger.info("Checking #{links.length} links".yellow)
-        links.each do |url, metadata|
+        Parallel.each(links, in_threads: (@config.threads || Parallel.processor_count * 2)) do |url, metadata|
           next if @config.skipped?(url)
           if @cached.has_key?(url.chomp('/'))
             @logger.info("Loaded #{url} from cache".green)
@@ -99,7 +99,7 @@ module Blinkr
               end
             end
             res = browser.process(url, @config.max_retrys)
-            @cached["#{url.chomp('/')}"] = { response: res }
+            @cached["#{url.chomp('/')}"] = {response: res}
             @last_checked = get_base(url)
             @last_checked_timestamp = Time.now
           end
@@ -120,7 +120,7 @@ module Blinkr
                                                    category: 'Broken link',
                                                    type: '<a href=""> target cannot be loaded',
                                                    url: url, title: "#{url} (line #{src[:line]})",
-                                                   code: resp_code, message: message.gsub!(/\d+ /,""),
+                                                   code: resp_code, message: message.gsub!(/\d+ /, ""),
                                                    detail: nil, snippet: src[:snippet],
                                                    icon: 'fa-bookmark-o')
 

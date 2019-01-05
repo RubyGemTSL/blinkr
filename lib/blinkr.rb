@@ -19,8 +19,7 @@ module Blinkr
              end
 
     context = Blinkr::Engine.new(config).run
-    status = generate_report(context, config)
-    exit(status)
+    generate_report(context, config)
   end
 
   def generate_report(context, config)

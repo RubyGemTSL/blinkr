@@ -52,5 +52,5 @@ else
   Blinkr.logger.info("Started at #{start}")
   exit_code = Blinkr.execute(options)
   puts("Total time: #{Time.at(DateTime.now.to_time - start.to_time).utc.strftime('%H:%M:%S')}")
-  exit(exit_code) unless options[:single_url]
+  exit(exit_code)
 end

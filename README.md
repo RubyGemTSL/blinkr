@@ -24,13 +24,16 @@ Or install it yourself as:
 
 You will need [chrome](http://chromedriver.chromium.org/downloads) to render pages, therefore you must add chromedriver to your path. Optionally for speed and ease of use you can use [docker-selenium](https://github.com/SeleniumHQ/docker-selenium) as a remote browser. For example;
 
+Set config to use a remote browser:
+      
       $ docker run -d -p 4444:4444 -v /dev/shm:/dev/shm selenium/standalone-chrome:3.141.59-dubnium
 
 Use your own grid, or standalone server by setting the following environment variables.      
       
       ENV['GRID_HOST'] = your selenium grid or standalone host (defaults to 'localhost')
       ENV['GRID_PORT'] = your selenium grid or standalone port (defaults to '4444')
-
+      
+      $ bundle exec blinkr --remote=true
 
 ## Quickstart
 
@@ -66,6 +69,11 @@ The following `blinkr.yml` file will be generated. NOTE, this includes all avail
 # The URL to check (often specified on the command line)
 #
 base_url: https://www.example.com
+
+#
+# Use remote browser (default: false)
+#
+remote: false
 
 #
 # Specify a sitemap to use, rather than the default <base_url>/sitemap.xml

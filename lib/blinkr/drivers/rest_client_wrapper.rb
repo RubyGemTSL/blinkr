@@ -17,7 +17,6 @@ module Blinkr
     private
 
     def _process(url, limit, max, opts = {}, &block)
-      @logger.info("Checking #{url}")
       raise "limit must be set. url: #{url}, limit: #{limit}, max: #{max}" if limit.nil?
       retries = 0
       begin

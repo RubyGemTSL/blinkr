@@ -12,6 +12,11 @@
 base_url: https://www.example.com
 
 #
+# Use remote browser (default: false)
+#
+remote: false
+
+#
 # Links and pages not to check (may be a regexp or a string).
 # skips:
 #  - !ruby/regexp /^https:\/\/developers\.redhat\.com\/quickstarts\.*\/.*/
@@ -41,11 +46,7 @@ ignores:
 environments:
 
 #
-# Use docker-blinkr remote browser
-#
-remote: false
-
-#
+# Number of threads to use for parallel execution
 #
 threads: 10
 
