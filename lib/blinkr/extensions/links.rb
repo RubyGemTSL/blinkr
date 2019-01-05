@@ -113,14 +113,14 @@ module Blinkr
           else
             (res.is_a? RestClient::Response) ? response = res : response = res.response
             resp_code = response.code.to_i
-            message = res.message if resp_code > 400 || resp_code == 0
+            message = res.message.gsub!(/\d+ /, '') if resp_code > 400 || resp_code == 0
           end
           metadata.each do |src|
             src[:page].errors << Blinkr::Error.new(severity: :danger,
                                                    category: 'Broken link',
                                                    type: '<a href=""> target cannot be loaded',
                                                    url: url, title: "#{url} (line #{src[:line]})",
-                                                   code: resp_code, message: message.gsub!(/\d+ /, ""),
+                                                   code: resp_code, message: message,
                                                    detail: nil, snippet: src[:snippet],
                                                    icon: 'fa-bookmark-o')
 
