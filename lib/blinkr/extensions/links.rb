@@ -106,7 +106,7 @@ module Blinkr
 
           if res == SocketError
             resp_code = 503
-            message = 'Socket Error'
+            message = 'Site can’t be reached'
           elsif res == RestClient::Exceptions::Timeout || res == RestClient::Exceptions::OpenTimeout
             resp_code = 404
             message = 'Not Found'
@@ -120,7 +120,7 @@ module Blinkr
                                                    category: 'Broken link',
                                                    type: '<a href=""> target cannot be loaded',
                                                    url: url, title: "#{url} (line #{src[:line]})",
-                                                   code: resp_code, message: message,
+                                                   code: resp_code, message: message.gsub!(/\d+ /,""),
                                                    detail: nil, snippet: src[:snippet],
                                                    icon: 'fa-bookmark-o')
 
@@ -135,7 +135,7 @@ module Blinkr
         begin
           unless @robots_txt_cache.has_key?(uri)
             robots = URI.join(uri.to_s, "/robots.txt").open
-            @robots_txt_cache["#{uri}"] = { response: robots }
+            @robots_txt_cache["#{uri}"] = {response: robots}
           end
           @robots_txt_cache["#{uri}"][:response].each do |line|
             next if line =~ /^\s*(#.*|$)/
@@ -146,7 +146,9 @@ module Blinkr
             @delay = value.to_i if key.downcase == 'crawl-delay'
           end
         rescue => error
-          @logger.warn("#{error} when accessing robots.txt")
+          unless error.message.include?('404')
+            @logger.warn("#{error} when accessing robots.txt")
+          end
         end
       end
 
