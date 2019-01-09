@@ -70,9 +70,9 @@ module Blinkr
 
       def get_links(links)
         if @config.ignore_external
-          links.select {|k| k.start_with? @config.base_url}
+          links.select { |k| k.start_with? @config.base_url }
         elsif @config.ignore_internal
-          links.reject {|k| k.start_with? @config.base_url}
+          links.reject { |k| k.start_with? @config.base_url }
         else
           links
         end
@@ -81,10 +81,10 @@ module Blinkr
       def check_links(browser, links)
         processed = 0
         @logger.info("Checking #{links.length} links".yellow)
-        Parallel.each(links, in_threads: (@config.threads || Parallel.processor_count * 2)) do |url, metadata|
+        Parallel.each(links, in_threads: (Parallel.processor_count * 2)) do |url, metadata|
           next if @config.skipped?(url)
           if @cached.has_key?(url.chomp('/'))
-            @logger.info("Loaded #{url} from cache".green)
+            @logger.info("Loaded #{url} from cache".green) if @config.verbose
             res = @cached["#{url.chomp('/')}"][:response]
           else
             unless @last_checked.nil? || @last_checked.include?(@config[:base_url])
@@ -93,7 +93,7 @@ module Blinkr
                 timestamp = Time.now - @last_checked_timestamp
                 respect_robots_txt(url_base)
                 if timestamp < @delay
-                  @logger.info("Respecting the website robots.txt Crawl-delay, waiting for #{@delay - timestamp} second(s)")
+                  @logger.info("Respecting the website robots.txt Crawl-delay, waiting for #{@delay - timestamp} second(s)") if @config.verbose
                   sleep(@delay - timestamp)
                 end
               end
@@ -126,7 +126,7 @@ module Blinkr
 
           end if resp_code > 400 || resp_code == 0
           processed += 1
-          @logger.info("Processed #{processed} of #{links.size}".yellow)
+          @logger.info("Processed #{processed} of #{links.size}".yellow) if @config.verbose
         end
       end
 
@@ -147,7 +147,7 @@ module Blinkr
           end
         rescue => error
           unless error.message.include?('404')
-            @logger.warn("#{error} when accessing robots.txt")
+            @logger.warn("#{error} when accessing robots.txt for #{uri}") if @config.verbose
           end
         end
       end
@@ -156,6 +156,7 @@ module Blinkr
         uri = URI.parse(url)
         "#{uri.scheme}://#{uri.host}"
       end
+
     end
   end
 end

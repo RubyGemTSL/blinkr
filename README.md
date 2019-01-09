@@ -115,7 +115,8 @@ ignores:
 #
 environments:
 
-#
+# 
+# The number of threads you wish to use: DEFAULT is system capabilities
 #
 threads: 10
 
