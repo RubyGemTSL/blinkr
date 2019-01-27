@@ -5,7 +5,7 @@ require 'colorize'
 class BlinkrConfigGenerator
 
   def initialize(test_dir)
-    @default_config = File.join(File.dirname(test_dir), '.', 'default-config/blinkr.yml')
+    @default_config = File.join(File.dirname(test_dir), '.', 'config/blinkr.yml')
   end
 
   def create_default_config
