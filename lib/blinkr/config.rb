@@ -18,7 +18,8 @@ module Blinkr
 
     DEFAULTS = {
         skips: [], ignores: [], environments: [], max_retrys: 3, browser: 'chrome', report: 'blinkr.html',
-        ignore_internal: false, ignore_external: false, js_errors: false, remote: false, verbose: false
+        ignore_internal: false, ignore_external: false, js_errors: false, remote: false, verbose: false,
+        ignore_ssl: false
     }.freeze
 
     AVAILABLE_BROWSERS = %w[chrome].freeze
