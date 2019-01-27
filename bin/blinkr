@@ -4,7 +4,6 @@ require 'optparse'
 require 'capybara'
 require 'capybara/dsl'
 require 'selenium-webdriver'
-require 'openssl'
 require_relative 'blinkr_config_generate'
 Encoding.default_external = 'UTF-8'
 
@@ -34,13 +33,8 @@ OptionParser.new do |opts|
   opts.on('--remote', 'Run checks using remote browser') do |opt|
     options[:remote] = opt
   end
-
-  opts.on('--ignore-ssl', 'Disable SSL certificate checking') do |opt|
-    options[:ignore_ssl] = opt
-  end
 end.parse!
 
-OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE if options[:ignore_ssl]
 require 'date'
 require 'blinkr/formatter/default_logger'
 require 'colorize'
