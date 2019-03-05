@@ -37,6 +37,7 @@ end.parse!
 
 require 'date'
 require 'blinkr/formatter/default_logger'
+require 'blinkr/ssl'
 require 'colorize'
 
 if options[:gen]
@@ -47,6 +48,7 @@ if options[:gen]
   end
 else
   start = DateTime.now
+  Blinkr.ignore_ssl_errors
   Blinkr.logger.info("Started at #{start}")
   exit_code = Blinkr.execute(options)
   puts("Total time: #{Time.at(DateTime.now.to_time - start.to_time).utc.strftime('%H:%M:%S')}")
