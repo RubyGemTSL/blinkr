@@ -17,6 +17,8 @@ module Blinkr
       @context = context
       @count = 0
       @logger = Blinkr.logger
+      @robots_txt_cache = {}
+      @disallowed = []
     end
 
     def process_all(urls, limit, opts = {}, &block)
@@ -37,7 +39,7 @@ module Blinkr
 
     def _process(url, limit, max, opts = {}, &block)
       raise "limit must be set. url: #{url}, limit: #{limit}, max: #{max}" if limit.nil?
-      unless @config.skipped?(url)
+      unless @config.skipped?(url) || disallowed?(url)
         output, status = Open3.capture2(command + "#{url} #{$remote}")
         if status == 0
           json = JSON.parse(output)
@@ -72,6 +74,33 @@ module Blinkr
         RestClient::Request.execute(method: :get, url: url, max_redirects: 6, timeout: 30, verify_ssl: false)
       rescue RestClient::ExceptionWithResponse => err
         err.response
+      end
+    end
+
+    def disallowed?(uri)
+      get_robots_txt(uri)
+      uri = URI.parse(uri)
+      @disallowed.any? { |url| uri.path.include?(url) }
+    end
+
+    def get_robots_txt(uri)
+      begin
+        unless @robots_txt_cache.has_key?(uri)
+          robots = URI.join(uri.to_s, "/robots.txt").open
+          @robots_txt_cache["#{uri}"] = { response: robots }
+        end
+        @robots_txt_cache["#{uri}"][:response].each do |line|
+          next if line =~ /^\s*(#.*|$)/
+          arr = line.split(":")
+          key = arr.shift
+          value = arr.join(":").strip
+          value.strip!
+          @disallowed << value if key.downcase == 'disallow'
+        end
+      rescue => error
+        unless error.message.include?('404')
+          @logger.warn("#{error} when accessing robots.txt for #{uri}") if @config.verbose
+        end
       end
     end
   end

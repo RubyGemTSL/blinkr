@@ -4,6 +4,11 @@ module Blinkr
   class RestClientWrapper
     attr_reader :count
 
+    HEADERS = {
+        'User-Agent': 'Blinkr broken-link checker',
+        'Accept-Encoding': '*/*',
+    }
+
     def initialize(config, context)
       @config = config
       @context = context
@@ -20,7 +25,14 @@ module Blinkr
       raise "limit must be set. url: #{url}, limit: #{limit}, max: #{max}" if limit.nil?
       retries = 0
       begin
-        RestClient::Request.execute(method: :get, url: url, max_redirects: (@config.max_retrys || 3), timeout: 30, verify_ssl: false)
+        RestClient::Request.execute(
+            method: :get,
+            url: url,
+            max_redirects: (@config.max_retrys || 3),
+            timeout: 30,
+            verify_ssl: false,
+            headers: HEADERS
+        )
       rescue RestClient::ExceptionWithResponse, SocketError => result
         return result.class if result.class == SocketError
         if retries < max
@@ -39,7 +51,14 @@ module Blinkr
 
     def get(url)
       begin
-        RestClient::Request.execute(method: :get, url: url, max_redirects: (@config.max_retrys || 3), timeout: 30, verify_ssl: false)
+        RestClient::Request.execute(
+            method: :get,
+            url: url,
+            max_redirects: (@config.max_retrys || 3),
+            timeout: 30,
+            verify_ssl: false,
+            headers: HEADERS
+        )
       rescue RestClient::ExceptionWithResponse => err
         err.response
       end

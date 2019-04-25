@@ -35,7 +35,6 @@ module Blinkr
       browser.process_all(urls, @config.max_page_retrys) do |response, javascript_errors|
         url = response.request.url
         if response.code == 200
-          @logger.info("Loaded page #{url}".green) if @config.verbose
           body = Nokogiri::HTML(response.body)
           page = OpenStruct.new(response: response,
                                 body: body.freeze,
