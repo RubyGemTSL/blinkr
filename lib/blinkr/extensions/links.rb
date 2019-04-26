@@ -93,13 +93,18 @@ module Blinkr
               if @last_checked.include?(url_base)
                 timestamp = Time.now - @last_checked_timestamp
                 respect_robots_txt(url_base)
-                if timestamp < @delay
-                  @logger.info("Respecting the website robots.txt Crawl-delay, waiting for #{@delay - timestamp} second(s)") if @config.verbose
-                  sleep(@delay - timestamp)
+                unless @delay.nil?
+                  if timestamp < @delay
+                    @logger.info("Respecting the website robots.txt Crawl-delay, waiting for #{@delay - timestamp} second(s)") if @config.verbose
+                    sleep(@delay - timestamp)
+                  end
                 end
               end
             end
             res = browser.process(url, @config.max_retrys)
+            if $is_unit_test.nil?
+              sleep(rand(1..2.5)) if @delay.nil?
+            end
             @cached["#{url.chomp('/')}"] = { response: res }
             @last_checked = get_base(url)
             @last_checked_timestamp = Time.now
@@ -132,7 +137,6 @@ module Blinkr
       end
 
       def respect_robots_txt(uri)
-        @delay = 0
         begin
           unless @robots_txt_cache.has_key?(uri)
             robots = URI.join(uri.to_s, "/robots.txt").open
@@ -145,6 +149,7 @@ module Blinkr
             value = arr.join(":").strip
             value.strip!
             @delay = value.to_i if key.downcase == 'crawl-delay'
+            puts "there should have been a #{@delay} delay"
             @disallowed << value if key.downcase == 'disallow'
           end
         rescue => error
