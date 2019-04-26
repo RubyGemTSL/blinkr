@@ -29,7 +29,7 @@ module Blinkr
           url = sanitize(url, src)
           unless url.nil?
             @collected_links[url] ||= []
-            @collected_links[url] << {page: page, line: attr.line, snippet: attr.parent.to_s}
+            @collected_links[url] << { page: page, line: attr.line, snippet: attr.parent.to_s }
           end
         end
         @links = get_links(@collected_links)
@@ -83,28 +83,26 @@ module Blinkr
         processed = 0
         @logger.info("Checking #{links.length} links".yellow)
         Parallel.each(links, in_threads: (Parallel.processor_count * 2)) do |url, metadata|
-          unless disallowed?(url)
-            next if @config.skipped?(url)
-            if @cached.has_key?(url.chomp('/'))
-              @logger.info("Loaded #{url} from cache".green) if @config.verbose
-              res = @cached["#{url.chomp('/')}"][:response]
-            else
-              unless @last_checked.nil? || @last_checked.include?(@config[:base_url])
-                url_base = get_base(url)
-                if @last_checked.include?(url_base)
-                  timestamp = Time.now - @last_checked_timestamp
-                  respect_robots_txt(url_base)
-                  if timestamp < @delay
-                    @logger.info("Respecting the website robots.txt Crawl-delay, waiting for #{@delay - timestamp} second(s)") if @config.verbose
-                    sleep(@delay - timestamp)
-                  end
+          next if @config.skipped?(url) || disallowed?(url)
+          if @cached.has_key?(url.chomp('/'))
+            @logger.info("Loaded #{url} from cache".green) if @config.verbose
+            res = @cached["#{url.chomp('/')}"][:response]
+          else
+            unless @last_checked.nil? || @last_checked.include?(@config[:base_url])
+              url_base = get_base(url)
+              if @last_checked.include?(url_base)
+                timestamp = Time.now - @last_checked_timestamp
+                respect_robots_txt(url_base)
+                if timestamp < @delay
+                  @logger.info("Respecting the website robots.txt Crawl-delay, waiting for #{@delay - timestamp} second(s)") if @config.verbose
+                  sleep(@delay - timestamp)
                 end
               end
-              res = browser.process(url, @config.max_retrys)
-              @cached["#{url.chomp('/')}"] = {response: res}
-              @last_checked = get_base(url)
-              @last_checked_timestamp = Time.now
             end
+            res = browser.process(url, @config.max_retrys)
+            @cached["#{url.chomp('/')}"] = { response: res }
+            @last_checked = get_base(url)
+            @last_checked_timestamp = Time.now
           end
 
           if res == SocketError
@@ -127,7 +125,7 @@ module Blinkr
                                                    detail: nil, snippet: src[:snippet],
                                                    icon: 'fa-bookmark-o')
 
-          end if resp_code > 400 || resp_code == 0
+          end if resp_code >= 400 || resp_code == 0
           processed += 1
           @logger.info("Processed #{processed} of #{links.size}".yellow) if @config.verbose
         end
@@ -147,7 +145,7 @@ module Blinkr
             value = arr.join(":").strip
             value.strip!
             @delay = value.to_i if key.downcase == 'crawl-delay'
-            @disallowed = value if key.downcase == 'disallow'
+            @disallowed << value if key.downcase == 'disallow'
           end
         rescue => error
           unless error.message.include?('404')
@@ -162,7 +160,8 @@ module Blinkr
       end
 
       def disallowed?(uri)
-        @disallowed.include?(uri)
+        uri = URI.parse(uri)
+        @disallowed.any? { |url| uri.path.include?(url) }
       end
     end
   end

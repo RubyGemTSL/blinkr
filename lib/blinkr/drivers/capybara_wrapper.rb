@@ -77,10 +77,15 @@ module Blinkr
       end
     end
 
-    def disallowed?(uri)
-      get_robots_txt(uri)
-      uri = URI.parse(uri)
+    def disallowed?(page)
+      get_robots_txt(get_base(page))
+      uri = URI.parse(page)
       @disallowed.any? { |url| uri.path.include?(url) }
+    end
+
+    def get_base(url)
+      uri = URI.parse(url)
+      "#{uri.scheme}://#{uri.host}"
     end
 
     def get_robots_txt(uri)
