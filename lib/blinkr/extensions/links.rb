@@ -149,7 +149,6 @@ module Blinkr
             value = arr.join(":").strip
             value.strip!
             @delay = value.to_i if key.downcase == 'crawl-delay'
-            puts "there should have been a #{@delay} delay"
             @disallowed << value if key.downcase == 'disallow'
           end
         rescue => error
