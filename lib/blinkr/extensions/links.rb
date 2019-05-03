@@ -164,8 +164,14 @@ module Blinkr
       end
 
       def disallowed?(uri)
-        uri = URI.parse(uri)
-        @disallowed.any? { |url| uri.path.include?(url) }
+        begin
+          uri = URI.parse(uri)
+          @disallowed.any? do |url|
+            uri.path.include?(url)
+          end
+        rescue
+          false
+        end
       end
     end
   end
