@@ -24,6 +24,7 @@ module Blinkr
     def _process(url, limit, max, opts = {}, &block)
       raise "limit must be set. url: #{url}, limit: #{limit}, max: #{max}" if limit.nil?
       retries = 0
+      puts "!!!!!!!!!!!!!!!!!!!! #{url}" if url === 'http://tel:+18887334281'
       begin
         RestClient::Request.execute(
             method: :get,
