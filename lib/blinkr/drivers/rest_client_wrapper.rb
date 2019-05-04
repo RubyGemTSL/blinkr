@@ -24,17 +24,16 @@ module Blinkr
     def _process(url, limit, max, opts = {}, &block)
       raise "limit must be set. url: #{url}, limit: #{limit}, max: #{max}" if limit.nil?
       retries = 0
-      puts "!!!!!!!!!!!!!!!!!!!! #{url}" if url === 'http://tel:+18887334281'
       begin
         RestClient::Request.execute(
             method: :get,
             url: url,
-            max_redirects: (@config.max_retrys || 3),
+            max_redirects: (@config.max_retrys || 2),
             timeout: 30,
             verify_ssl: false,
             headers: HEADERS
         )
-      rescue RestClient::ExceptionWithResponse, SocketError => result
+      rescue RestClient::ExceptionWithResponse, SocketError, OpenSSL::SSL::SSLError, URI::InvalidURIError => result
         return result.class if result.class == SocketError
         if retries < max
           retries += 1
@@ -47,21 +46,6 @@ module Blinkr
               response = result
           return response
         end
-      end
-    end
-
-    def get(url)
-      begin
-        RestClient::Request.execute(
-            method: :get,
-            url: url,
-            max_redirects: (@config.max_retrys || 3),
-            timeout: 30,
-            verify_ssl: false,
-            headers: HEADERS
-        )
-      rescue RestClient::ExceptionWithResponse => err
-        err.response
       end
     end
   end

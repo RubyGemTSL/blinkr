@@ -25,8 +25,8 @@ module Blinkr
               src = page.response.request.url :
               src = page.response.request.url + '/'
           url = attr.value
-          next if @config.skipped?(url)
           url = sanitize(url, src)
+          next if @config.skipped?(url) || url.nil?
           unless url.nil?
             @collected_links[url] ||= []
             @collected_links[url] << { page: page, line: attr.line, snippet: attr.parent.to_s }
@@ -116,6 +116,9 @@ module Blinkr
           elsif res == RestClient::Exceptions::Timeout || res == RestClient::Exceptions::OpenTimeout
             resp_code = 404
             message = 'Not Found'
+          elsif res.inspect == 'URI::InvalidURIError'
+            resp_code = ''
+            message = 'Invalid URL'
           else
             (res.is_a? RestClient::Response) ? response = res : response = res.response
             resp_code = response.code.to_i
