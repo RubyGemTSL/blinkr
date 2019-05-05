@@ -9,9 +9,12 @@ module Blinkr
 
       def collect(page)
         page.javascript_errors.each do |error|
-          page.errors << Blinkr::Error.new(severity: 'danger', category: 'JavaScript',
-                                           type: 'JavaScript error', title: error['msg'],
-                                           snippet: error['trace'], icon: 'fa-gears')
+          page.errors << Blinkr::Error.new(severity: error['level'],
+                                           category: 'JavaScript',
+                                           type: 'JavaScript error',
+                                           title: nil,
+                                           snippet: error['message'],
+                                           icon: 'fa-bookmark-o')
         end if @config.js_errors
       end
     end

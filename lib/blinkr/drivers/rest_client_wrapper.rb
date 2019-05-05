@@ -33,8 +33,8 @@ module Blinkr
             verify_ssl: false,
             headers: HEADERS
         )
-      rescue RestClient::ExceptionWithResponse, SocketError, OpenSSL::SSL::SSLError, URI::InvalidURIError => result
-        return result.class if result.class == SocketError
+      rescue RestClient::ExceptionWithResponse, RestClient::SSLCertificateNotVerified, SocketError => result
+        return result.class if result.class == (SocketError || RestClient::SSLCertificateNotVerified)
         if retries < max
           retries += 1
           @logger.info("Loading #{url} (attempt #{retries} of #{max})".yellow) if @config.verbose

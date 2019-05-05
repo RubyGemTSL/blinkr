@@ -3,7 +3,7 @@ require 'uri'
 module Blinkr
   module HttpUtils
     def sanitize(dest, src)
-      return nil if dest.nil? || src.nil? || dest.include?('javascript:void(0)') || /http:\/\/tel:/ === dest
+      return nil if dest.nil? || src.nil? || dest.include?('javascript:void(0)') || /tel:/ === dest
 
       # src is the page that tried to load the URL
       # URI fails to handle #! style fragments, so we chomp them

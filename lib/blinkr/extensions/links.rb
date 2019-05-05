@@ -102,10 +102,7 @@ module Blinkr
               end
             end
             res = browser.process(url, @config.max_retrys)
-            if $is_unit_test.nil?
-              sleep(rand(1..2.5)) if @delay.nil?
-            end
-            @cached["#{url.chomp('/')}"] = { response: res }
+            @cached["#{url.chomp('/')}"] = {response: res}
             @last_checked = get_base(url)
             @last_checked_timestamp = Time.now
           end
@@ -113,12 +110,12 @@ module Blinkr
           if res == SocketError
             resp_code = 503
             message = 'Site can’t be reached'
+          elsif res == RestClient::SSLCertificateNotVerified
+            resp_code = 0
+            message = 'Certificate error'
           elsif res == RestClient::Exceptions::Timeout || res == RestClient::Exceptions::OpenTimeout
             resp_code = 404
             message = 'Not Found'
-          elsif res.inspect == 'URI::InvalidURIError'
-            resp_code = ''
-            message = 'Invalid URL'
           else
             (res.is_a? RestClient::Response) ? response = res : response = res.response
             resp_code = response.code.to_i

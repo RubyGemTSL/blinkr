@@ -60,9 +60,10 @@ module Blinkr
 
     def js_errors
       errors = []
-      @browser.driver.browser.manage.logs.get(:browser).each do |error|
-        errors << error.message
+      @browser.driver.browser.manage.logs.get(:browser).map do |error|
+        errors << { level: error.level.downcase, message: error.message }
       end
+      errors
     end
   end
 end

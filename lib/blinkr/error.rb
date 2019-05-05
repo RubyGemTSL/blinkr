@@ -1,5 +1,5 @@
 module Blinkr
-  SEVERITY = %I[success info warning danger].freeze
+  SEVERITY = %I[success info warning danger severe].freeze
   class Error
     attr_reader :severity, :category, :type, :title, :message, :snippet, :icon, :code, :detail, :url
 
