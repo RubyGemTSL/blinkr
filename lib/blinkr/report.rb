@@ -24,7 +24,6 @@ module Blinkr
       @context.type = {}
       @context.pages.each do |url, page|
         page.url = url
-        page.max_severity = ::Blinkr::SEVERITY.first
         page.severities = []
         page.categories = []
         page.types = []
@@ -33,7 +32,6 @@ module Blinkr
           @context.severity[error.severity] ||= OpenStruct.new(count: 0)
           @context.severity[error.severity].count += 1
           page.severities << error.severity
-          page.max_severity = error.severity if ::Blinkr::SEVERITY.index(error.severity) > ::Blinkr::SEVERITY.index(page.max_severity)
           @context.category[error.category] ||= OpenStruct.new(count: 0)
           @context.category[error.category].count += 1
           page.categories << error.category
@@ -49,10 +47,13 @@ module Blinkr
       File.open(@config.report, 'w') do |file|
         file.write(Slim::Template.new(HTML_REPORT_TMPL).render(OpenStruct.new(blinkr: @context, errors: @context.to_json)))
       end
-      @context.severity[:danger].nil? ? danger = 0 : danger = @context.severity[:danger].count
-      @context.severity[:warning].nil? ? warnings = 0 : warnings = @context.severity[:warning].count
-
-      [danger, warnings]
+      errors = 0
+      Blinkr::SEVERITY.each do |severity|
+        unless @context.severity[severity].nil?
+          errors += @context.severity[severity].count
+        end
+      end
+      errors
     end
   end
 end

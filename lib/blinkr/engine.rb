@@ -7,6 +7,8 @@ require 'blinkr/report'
 require 'blinkr/formatter/default_logger'
 require 'blinkr/extensions/links'
 require 'blinkr/extensions/javascript'
+require 'blinkr/extensions/img_alt'
+require 'blinkr/extensions/empty_a_href'
 require 'json'
 require 'pathname'
 require 'fileutils'
@@ -114,6 +116,8 @@ module Blinkr
     def default_pipeline
       extension(Blinkr::Extensions::Links.new(@config))
       extension(Blinkr::Extensions::JavaScript.new(@config))
+      extension(Blinkr::Extensions::EmptyAHref.new(@config))
+      extension(Blinkr::Extensions::ImgAlt.new(@config))
     end
 
     def load_pipeline

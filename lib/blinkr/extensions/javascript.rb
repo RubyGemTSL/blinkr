@@ -14,7 +14,7 @@ module Blinkr
                                            type: 'JavaScript error',
                                            title: nil,
                                            snippet: error['message'],
-                                           icon: 'fa-bookmark-o')
+                                           icon: 'fa-gears')
         end if @config.js_errors
       end
     end

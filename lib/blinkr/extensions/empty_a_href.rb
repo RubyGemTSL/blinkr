@@ -17,7 +17,7 @@ module Blinkr
                                              message: %(<a href=''> empty),
                                              snippet: a.to_s,
                                              icon: 'fa-info')
-          end
+          end if @config.empty_href
         end
       end
     end

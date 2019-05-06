@@ -24,12 +24,12 @@ module Blinkr
 
   def generate_report(context, config)
     FileUtils.mkdir_p(Pathname.new(config.report).parent) unless config.export.nil?
-    errors, warnings = Blinkr::Report.new(context, config).render
-    if errors > 0 || warnings > 0
-      Blinkr.logger.warn("Blinkr failed with #{errors} errors".red)
+    errors = Blinkr::Report.new(context, config).render
+    if errors > 0
+      Blinkr.logger.warn("Blinkr found #{errors} errors".red)
       status = 1
     else
-      Blinkr.logger.info('Blinkr completed with no errors or warnings'.green)
+      Blinkr.logger.info('Blinkr completed with no errors'.green)
       status = 0
     end
     status

@@ -80,6 +80,19 @@
 #
 #js_errors: false
 
+# SEO errors:
+# To warn when a page does not contain a title:
+#
+#empty_title: true
+#
+# To warn when a link does not contain an href:
+#
+#empty_href: true
+
+# To warn when an image does not contain an an alt tag:
+#
+#empty_img_alt: true
+#
 #
 # The output file to write the report to
 #

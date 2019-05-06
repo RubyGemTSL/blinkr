@@ -15,7 +15,7 @@ module Blinkr
                                              title: "#{img['src']} (line #{img.line})",
                                              message: '<img alt=""> missing', snippet: img.to_s,
                                              icon: 'fa-info')
-        end
+        end if @config.empty_img_alt
       end
     end
   end

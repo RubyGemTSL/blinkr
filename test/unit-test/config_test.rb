@@ -5,9 +5,10 @@ class TestBlinkr < Minitest::Test
 
   DEFAULTS = {
       skips: [], ignores: [], environments: [], max_retrys: 3,
-      browser: 'chrome', report: 'blinkr.html',
-      ignore_internal: false, ignore_external: false, js_errors: false,
-      remote: false, verbose: false
+      browser: 'chrome', report: 'blinkr.html', ignore_internal: false,
+      ignore_external: false, js_errors: false, remote: false,
+      verbose: false, empty_href: false, empty_img_alt: false,
+      empty_title: false
   }.freeze
 
   describe Blinkr::Config do
@@ -33,7 +34,7 @@ class TestBlinkr < Minitest::Test
       args = {}
       options[:config_file] = "#{__dir__}/config/valid_blinkr.yaml"
       actual_hash = Blinkr::Config.read(options[:config_file], args)
-      expected_hash = { skips: [/^http:\/\/(www\.)?example\.com\/foo/], ignores: [], environments: [], max_retrys: 3, browser: 'chrome', report: 'foo/blinkr.html', ignore_internal: false, ignore_external: false, js_errors: false, remote: false, verbose: false, base_url: 'http://www.example.com/', threads: 20, config_file: "#{__dir__}/config/valid_blinkr.yaml" }
+      expected_hash = { skips: [/^http:\/\/(www\.)?example\.com\/foo/], ignores: [], environments: [], max_retrys: 3, browser: 'chrome', report: 'foo/blinkr.html', ignore_internal: false, ignore_external: false, js_errors: false, remote: false, verbose: false, empty_href: false, empty_img_alt: false, empty_title: false, base_url: 'http://www.example.com/', threads: 20, config_file: "#{__dir__}/config/valid_blinkr.yaml" }
       assert_equal expected_hash.to_s, actual_hash.to_h.to_s
     end
 
