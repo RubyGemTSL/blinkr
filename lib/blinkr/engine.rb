@@ -77,8 +77,8 @@ module Blinkr
       end
     end
 
-    def analyze(typhoeus)
-      execute :analyze, typhoeus
+    def analyze(browser)
+      execute :analyze, browser
     end
 
     def collect(page)
@@ -135,7 +135,7 @@ module Blinkr
             pipeline = @extensions.inject {|memo, v| "#{memo}, #{v}"}
             @logger.info("Pipeline: #{pipeline}".yellow)
         else
-          raise "Cannot find pipeline file #{pipeline_file}"
+          fail("Cannot find pipeline file #{pipeline_file}")
         end
       end
     end

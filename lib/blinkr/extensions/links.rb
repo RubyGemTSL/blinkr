@@ -81,6 +81,7 @@ module Blinkr
 
       def check_links(browser, links)
         processed = 0
+        test = []
         @logger.info("Checking #{links.length} links".yellow)
         Parallel.each(links, in_threads: (Parallel.processor_count * 2)) do |url, metadata|
           next if @config.skipped?(url) || disallowed?(url)
@@ -121,6 +122,7 @@ module Blinkr
             resp_code = response.code.to_i
             message = res.message.gsub!(/\d+ /, '') if resp_code > 400 || resp_code == 0
           end
+
           metadata.each do |src|
             src[:page].errors << Blinkr::Error.new(severity: :danger,
                                                    category: 'Broken link',
@@ -131,9 +133,11 @@ module Blinkr
                                                    icon: 'fa-bookmark-o')
 
           end if resp_code >= 400 || resp_code == 0
-          processed += 1
-          @logger.info("Processed #{processed} of #{links.size}".yellow) if @config.verbose
+        processed += 1
+          test << url
+          @logger.info("Processed #{processed} of #{links.size}".yellow)
         end
+        puts "#{test.size} !!!!!"
       end
 
       def respect_robots_txt(uri)
