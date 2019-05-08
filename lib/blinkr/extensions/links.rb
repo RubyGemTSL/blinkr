@@ -81,10 +81,11 @@ module Blinkr
 
       def check_links(browser, links)
         processed = 0
-        test = []
         @logger.info("Checking #{links.length} links".yellow)
         Parallel.each(links, in_threads: (Parallel.processor_count * 2)) do |url, metadata|
           next if @config.skipped?(url) || disallowed?(url)
+          processed += 1
+          @logger.info("Checking #{processed} of #{links.size}".yellow)
           if @cached.has_key?(url.chomp('/'))
             @logger.info("Loaded #{url} from cache".green) if @config.verbose
             res = @cached["#{url.chomp('/')}"][:response]
@@ -133,11 +134,7 @@ module Blinkr
                                                    icon: 'fa-bookmark-o')
 
           end if resp_code >= 400 || resp_code == 0
-        processed += 1
-          test << url
-          @logger.info("Processed #{processed} of #{links.size}".yellow)
         end
-        puts "#{test.size} !!!!!"
       end
 
       def respect_robots_txt(uri)
