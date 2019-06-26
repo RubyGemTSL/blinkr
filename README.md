@@ -174,7 +174,7 @@ Blinkr was originally created by [Pete Muir](https://github.com/pmuir), however 
 
 Please feel free to help us improve Blinkr!
 
-1. Fork it ( https://github.com/redhat-developer/blinkr/fork )
+1. Fork it ( https://github.com/RubyGemTSL/blinkr/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Test it, this is important! to run the existing tests (`bundle exec rake test`), however please create unit-test's for new features.
 3. Commit your changes (`git commit -am 'Add some feature'`)
